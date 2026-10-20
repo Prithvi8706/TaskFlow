@@ -1,7 +1,10 @@
+import csv
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.db.models import Case, Count, F, IntegerField, Q, Sum, Value, When
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -280,6 +283,44 @@ def task_list(request):
         "tracker/task_list.html",
         {"tasks": tasks, "filter_form": form, "is_filtered": is_filtered, "status_choices": Task.Status.choices},
     )
+
+
+def _csv_cell(value):
+    """Neutralise spreadsheet formulas so exported text cannot execute in Excel."""
+    text = "" if value is None else str(value)
+    return "'" + text if text[:1] in ("=", "+", "-", "@") else text
+
+
+@login_required
+def task_export_csv(request):
+    """Download the task list with the same search / filter / sort as the page."""
+    _, tasks = filtered_tasks(request)
+    stamp = timezone.localtime().strftime("%Y%m%d-%H%M")
+    response = HttpResponse(content_type="text/csv; charset=utf-8")
+    response["Content-Disposition"] = f'attachment; filename="taskflow-tasks-{stamp}.csv"'
+    response.write("\ufeff")  # BOM so Excel opens UTF-8 correctly
+    writer = csv.writer(response)
+    writer.writerow([
+        "task_id", "title", "project", "milestone", "category", "status", "priority",
+        "deadline", "overdue", "created_at", "completed_at", "tags", "open_prerequisites",
+    ])
+    for t in tasks:
+        writer.writerow([_csv_cell(v) for v in [
+            t.task_id,
+            t.title,
+            t.project.name,
+            t.milestone.name if t.milestone else "",
+            t.category.name if t.category else "",
+            t.get_status_display(),
+            t.get_priority_display(),
+            t.deadline.isoformat() if t.deadline else "",
+            "yes" if t.is_overdue else "no",
+            timezone.localtime(t.created_at).strftime("%Y-%m-%d %H:%M"),
+            timezone.localtime(t.completed_at).strftime("%Y-%m-%d %H:%M") if t.completed_at else "",
+            ", ".join(tag.name for tag in t.tags.all()),
+            t.open_prereqs,
+        ]])
+    return response
 
 
 @login_required

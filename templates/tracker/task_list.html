@@ -6,7 +6,10 @@
     <h1>Tasks</h1>
     <p>{{ tasks|length }} task{{ tasks|length|pluralize }}</p>
   </div>
-  <div class="page-actions"><a class="btn btn-primary" href="{% url 'task_create' %}">New task</a></div>
+  <div class="page-actions">
+    {% if tasks %}<a class="btn" href="{% url 'task_export_csv' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}" title="Download the tasks shown below">Export CSV</a>{% endif %}
+    <a class="btn btn-primary" href="{% url 'task_create' %}">New task</a>
+  </div>
 </div>
 
 <form method="get" class="card filter-bar">

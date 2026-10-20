@@ -14,6 +14,7 @@ urlpatterns = [
     path("milestones/<int:pk>/delete/", views.milestone_delete, name="milestone_delete"),
     path("tasks/", views.task_list, name="task_list"),
     path("tasks/new/", views.task_create, name="task_create"),
+    path("tasks/export.csv", views.task_export_csv, name="task_export_csv"),
     path("tasks/<int:pk>/", views.task_detail, name="task_detail"),
     path("tasks/<int:pk>/edit/", views.task_edit, name="task_edit"),
     path("tasks/<int:pk>/delete/", views.task_delete, name="task_delete"),
