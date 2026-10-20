@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Milestone, Project
+from .models import Category, Milestone, Project, Task
 
 
 class DateInput(forms.DateInput):
@@ -77,3 +77,35 @@ class MilestoneForm(forms.ModelForm):
     def save(self, commit=True):
         self.instance.project = self.project
         return super().save(commit=commit)
+
+
+class CategoryForm(OwnedNameMixin, forms.ModelForm):
+    class Meta:
+        model = Category
+        fields = ["name"]
+        widgets = {"name": forms.TextInput(attrs={"placeholder": "e.g. Backend"})}
+
+
+class TaskForm(forms.ModelForm):
+    class Meta:
+        model = Task
+        fields = ["title", "description", "project", "milestone", "category", "priority", "status", "deadline"]
+        widgets = {"deadline": DateInput(), "description": forms.Textarea(attrs={"rows": 4})}
+
+    def __init__(self, *args, user, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+        # Only offer rows the user owns, so a forged POST cannot attach foreign rows.
+        self.fields["project"].queryset = Project.objects.filter(owner=user)
+        self.fields["milestone"].queryset = Milestone.objects.filter(project__owner=user).select_related("project")
+        self.fields["milestone"].label_from_instance = lambda m: f"{m.project.name} · {m.name}"
+        self.fields["category"].queryset = Category.objects.filter(owner=user)
+
+    def clean(self):
+        cleaned = super().clean()
+        project, milestone, deadline = cleaned.get("project"), cleaned.get("milestone"), cleaned.get("deadline")
+        if project and milestone and milestone.project_id != project.pk:
+            self.add_error("milestone", "This milestone belongs to a different project.")
+        if project and deadline and deadline < project.start_date:
+            self.add_error("deadline", f"Deadline is before the project starts ({project.start_date:%b %d, %Y}).")
+        return cleaned

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{% if task %}Edit task{% else %}New task{% endif %}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <div class="faint small"><a href="{% url 'task_list' %}">Tasks</a> /</div>
+    <h1>{% if task %}Edit “{{ task.title }}”{% else %}New task{% endif %}</h1>
+  </div>
+</div>
+<div class="card" style="max-width:820px"><div class="card-body">
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "partials/form_errors.html" %}
+    <div class="form-grid">
+      {% include "partials/field.html" with field=form.title full=True %}
+      {% include "partials/field.html" with field=form.description full=True %}
+      {% include "partials/field.html" with field=form.project %}
+      {% include "partials/field.html" with field=form.milestone %}
+      {% include "partials/field.html" with field=form.category %}
+      {% include "partials/field.html" with field=form.deadline %}
+      {% include "partials/field.html" with field=form.priority %}
+      {% include "partials/field.html" with field=form.status %}
+    </div>
+    <div class="form-actions">
+      <a class="btn" href="{% if task %}{% url 'task_detail' task.pk %}{% else %}{% url 'task_list' %}{% endif %}">Cancel</a>
+      <button class="btn btn-primary" type="submit">{% if task %}Save changes{% else %}Create task{% endif %}</button>
+    </div>
+  </form>
+</div></div>
+{% endblock %}

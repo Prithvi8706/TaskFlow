@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Categories{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Categories</h1>
+    <p>Group tasks by the kind of work they are.</p>
+  </div>
+</div>
+
+<div class="grid grid-2" style="align-items:start">
+  <div class="card">
+    {% if categories %}
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Category</th><th class="num">Tasks</th><th></th></tr></thead>
+      <tbody>
+      {% for c in categories %}
+        <tr>
+          <td><strong>{{ c.name }}</strong></td>
+          <td class="num">{{ c.task_count }}</td>
+          <td class="row-actions"><a class="btn btn-sm btn-ghost" href="{% url 'category_delete' c.pk %}">Delete</a></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    {% else %}
+    <div class="card-body muted">No categories yet.</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h2>Add category</h2></div>
+    <div class="card-body">
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% include "partials/field.html" with field=form.name %}
+        <div class="form-actions"><button class="btn btn-primary" type="submit">Add</button></div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

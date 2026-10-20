@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Tasks{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Tasks</h1>
+    <p>{{ tasks|length }} task{{ tasks|length|pluralize }}</p>
+  </div>
+  <div class="page-actions"><a class="btn btn-primary" href="{% url 'task_create' %}">New task</a></div>
+</div>
+
+<div class="card">
+  {% if tasks %}
+    {% include "tracker/_task_table.html" with show_project=True %}
+  {% else %}
+    <div class="card-body muted">No tasks yet.</div>
+  {% endif %}
+</div>
+{% endblock %}

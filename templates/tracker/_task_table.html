@@ -1,0 +1,18 @@
+<div class="table-wrap"><table class="table">
+  <thead><tr><th>Task</th>{% if show_project %}<th>Project</th>{% endif %}<th>Status</th><th>Priority</th><th>Milestone</th><th>Deadline</th></tr></thead>
+  <tbody>
+  {% for t in tasks %}
+    <tr>
+      <td>
+        <a href="{% url 'task_detail' t.pk %}"><strong>{{ t.title }}</strong></a>
+        {% if t.category %}<div class="faint small">{{ t.category }}</div>{% endif %}
+      </td>
+      {% if show_project %}<td><a class="muted" href="{% url 'project_detail' t.project_id %}">{{ t.project.name }}</a></td>{% endif %}
+      <td><span class="badge badge-{{ t.status }}">{{ t.get_status_display }}</span></td>
+      <td><span class="priority priority-{{ t.priority }}">{{ t.get_priority_display }}</span></td>
+      <td class="muted">{{ t.milestone.name|default:"—" }}</td>
+      <td class="{% if t.is_overdue %}overdue{% else %}muted{% endif %}">{{ t.deadline|date:"M j, Y"|default:"—" }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table></div>

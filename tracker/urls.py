@@ -11,4 +11,11 @@ urlpatterns = [
     path("projects/<int:project_pk>/milestones/new/", views.milestone_create, name="milestone_create"),
     path("milestones/<int:pk>/edit/", views.milestone_edit, name="milestone_edit"),
     path("milestones/<int:pk>/delete/", views.milestone_delete, name="milestone_delete"),
+    path("tasks/", views.task_list, name="task_list"),
+    path("tasks/new/", views.task_create, name="task_create"),
+    path("tasks/<int:pk>/", views.task_detail, name="task_detail"),
+    path("tasks/<int:pk>/edit/", views.task_edit, name="task_edit"),
+    path("tasks/<int:pk>/delete/", views.task_delete, name="task_delete"),
+    path("categories/", views.category_list, name="category_list"),
+    path("categories/<int:pk>/delete/", views.category_delete, name="category_delete"),
 ]

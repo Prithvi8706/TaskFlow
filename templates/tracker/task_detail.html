@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}{{ task.title }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <div class="faint small"><a href="{% url 'project_list' %}">Projects</a> / <a href="{% url 'project_detail' task.project_id %}">{{ task.project.name }}</a> /</div>
+    <h1>{{ task.title }}</h1>
+    <p>
+      <span class="badge badge-{{ task.status }}">{{ task.get_status_display }}</span>
+      &nbsp;<span class="priority priority-{{ task.priority }}">{{ task.get_priority_display }} priority</span>
+    </p>
+  </div>
+  <div class="page-actions">
+    <a class="btn" href="{% url 'task_edit' task.pk %}">Edit</a>
+    <a class="btn" href="{% url 'task_delete' task.pk %}">Delete</a>
+  </div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <div class="card-head"><h2>Details</h2></div>
+    <div class="card-body">
+      <dl class="details">
+        <dt>Project</dt><dd><a href="{% url 'project_detail' task.project_id %}">{{ task.project.name }}</a></dd>
+        <dt>Milestone</dt><dd>{{ task.milestone.name|default:"—" }}</dd>
+        <dt>Category</dt><dd>{{ task.category.name|default:"—" }}</dd>
+        <dt>Deadline</dt><dd class="{% if task.is_overdue %}overdue{% endif %}">{{ task.deadline|date:"M j, Y"|default:"—" }}{% if task.is_overdue %} · overdue{% endif %}</dd>
+        <dt>Created</dt><dd>{{ task.created_at|date:"M j, Y H:i" }}</dd>
+        <dt>Completed</dt><dd>{{ task.completed_at|date:"M j, Y H:i"|default:"—" }}</dd>
+      </dl>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head"><h2>Description</h2></div>
+    <div class="card-body">{{ task.description|default:"No description."|linebreaksbr }}</div>
+  </div>
+</div>
+{% endblock %}

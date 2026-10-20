@@ -281,3 +281,6 @@ table.table { width: 100%; border-collapse: collapse; }
 .row-actions { text-align: right; white-space: nowrap; }
 .stat { font-size: 26px; font-weight: 700; margin-top: 4px; font-variant-numeric: tabular-nums; }
 .overdue { color: var(--danger); font-weight: 500; }
+.details { display: grid; grid-template-columns: 120px 1fr; gap: 10px 16px; margin: 0; }
+.details dt { color: var(--text-muted); }
+.details dd { margin: 0; }
