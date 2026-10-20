@@ -24,6 +24,7 @@
         <dt>Project</dt><dd><a href="{% url 'project_detail' task.project_id %}">{{ task.project.name }}</a></dd>
         <dt>Milestone</dt><dd>{{ task.milestone.name|default:"—" }}</dd>
         <dt>Category</dt><dd>{{ task.category.name|default:"—" }}</dd>
+        <dt>Tags</dt><dd>{% for tag in task.tags.all %}<span class="tag-chip">#{{ tag.name }}</span> {% empty %}—{% endfor %}</dd>
         <dt>Deadline</dt><dd class="{% if task.is_overdue %}overdue{% endif %}">{{ task.deadline|date:"M j, Y"|default:"—" }}{% if task.is_overdue %} · overdue{% endif %}</dd>
         <dt>Created</dt><dd>{{ task.created_at|date:"M j, Y H:i" }}</dd>
         <dt>Completed</dt><dd>{{ task.completed_at|date:"M j, Y H:i"|default:"—" }}</dd>

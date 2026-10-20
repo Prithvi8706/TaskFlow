@@ -4,8 +4,8 @@ from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
-from .forms import CategoryForm, MilestoneForm, ProjectForm, TaskForm
-from .models import Category, Milestone, Project, Task
+from .forms import CategoryForm, MilestoneForm, ProjectForm, TagForm, TaskForm
+from .models import Category, Milestone, Project, Tag, Task
 
 
 # ---------------------------------------------------------------- projects
@@ -27,7 +27,7 @@ def project_list(request):
 @login_required
 def project_detail(request, pk):
     project = get_object_or_404(Project, pk=pk, owner=request.user)
-    tasks = project.tasks.select_related("milestone", "category").order_by("deadline", "title")
+    tasks = project.tasks.select_related("milestone", "category").prefetch_related("tags").order_by("deadline", "title")
     milestones = project.milestones.annotate(
         total_tasks=Count("tasks"),
         completed_tasks=Count("tasks", filter=Q(tasks__status=Task.Status.COMPLETED)),
@@ -136,7 +136,11 @@ def milestone_delete(request, pk):
 
 
 def user_tasks(user):
-    return Task.objects.filter(project__owner=user).select_related("project", "milestone", "category")
+    return (
+        Task.objects.filter(project__owner=user)
+        .select_related("project", "milestone", "category")
+        .prefetch_related("tags")
+    )
 
 
 @login_required
@@ -225,5 +229,38 @@ def category_delete(request, pk):
             "kind": "category",
             "warning": "Tasks in this category are kept and become uncategorised.",
             "cancel_url": reverse("category_list"),
+        },
+    )
+
+
+# -------------------------------------------------------------------- tags
+
+
+@login_required
+def tag_list(request):
+    form = TagForm(request.POST or None, owner=request.user)
+    if request.method == "POST" and form.is_valid():
+        tag = form.save()
+        messages.success(request, f"Tag “{tag.name}” added.")
+        return redirect("tag_list")
+    tags = Tag.objects.filter(owner=request.user).annotate(task_count=Count("tasks"))
+    return render(request, "tracker/tag_list.html", {"form": form, "tags": tags})
+
+
+@login_required
+def tag_delete(request, pk):
+    tag = get_object_or_404(Tag, pk=pk, owner=request.user)
+    if request.method == "POST":
+        tag.delete()
+        messages.success(request, f"Tag “{tag.name}” deleted.")
+        return redirect("tag_list")
+    return render(
+        request,
+        "tracker/confirm_delete.html",
+        {
+            "object": tag,
+            "kind": "tag",
+            "warning": "It is removed from every task (its task_tag rows are deleted).",
+            "cancel_url": reverse("tag_list"),
         },
     )

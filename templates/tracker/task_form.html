@@ -20,6 +20,11 @@
       {% include "partials/field.html" with field=form.deadline %}
       {% include "partials/field.html" with field=form.priority %}
       {% include "partials/field.html" with field=form.status %}
+      <div class="field full">
+        <label>Tags</label>
+        {% if form.tags.field.queryset %}{{ form.tags }}{% else %}<div class="muted small">No tags yet. <a href="{% url 'tag_list' %}">Create tags</a> to label tasks.</div>{% endif %}
+        {{ form.tags.errors }}
+      </div>
     </div>
     <div class="form-actions">
       <a class="btn" href="{% if task %}{% url 'task_detail' task.pk %}{% else %}{% url 'task_list' %}{% endif %}">Cancel</a>

@@ -284,3 +284,4 @@ table.table { width: 100%; border-collapse: collapse; }
 .details { display: grid; grid-template-columns: 120px 1fr; gap: 10px 16px; margin: 0; }
 .details dt { color: var(--text-muted); }
 .details dd { margin: 0; }
+.task-meta { display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; margin-top: 2px; }

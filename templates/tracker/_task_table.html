@@ -5,7 +5,10 @@
     <tr>
       <td>
         <a href="{% url 'task_detail' t.pk %}"><strong>{{ t.title }}</strong></a>
-        {% if t.category %}<div class="faint small">{{ t.category }}</div>{% endif %}
+        <div class="task-meta">
+          {% if t.category %}<span class="faint small">{{ t.category }}</span>{% endif %}
+          {% for tag in t.tags.all %}<span class="tag-chip">#{{ tag.name }}</span>{% endfor %}
+        </div>
       </td>
       {% if show_project %}<td><a class="muted" href="{% url 'project_detail' t.project_id %}">{{ t.project.name }}</a></td>{% endif %}
       <td><span class="badge badge-{{ t.status }}">{{ t.get_status_display }}</span></td>

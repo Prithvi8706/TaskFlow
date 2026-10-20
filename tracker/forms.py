@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Category, Milestone, Project, Task
+from .models import Category, Milestone, Project, Tag, Task
 
 
 class DateInput(forms.DateInput):
@@ -89,8 +89,12 @@ class CategoryForm(OwnedNameMixin, forms.ModelForm):
 class TaskForm(forms.ModelForm):
     class Meta:
         model = Task
-        fields = ["title", "description", "project", "milestone", "category", "priority", "status", "deadline"]
-        widgets = {"deadline": DateInput(), "description": forms.Textarea(attrs={"rows": 4})}
+        fields = ["title", "description", "project", "milestone", "category", "priority", "status", "deadline", "tags"]
+        widgets = {
+            "deadline": DateInput(),
+            "description": forms.Textarea(attrs={"rows": 4}),
+            "tags": forms.CheckboxSelectMultiple,
+        }
 
     def __init__(self, *args, user, **kwargs):
         super().__init__(*args, **kwargs)
@@ -100,6 +104,8 @@ class TaskForm(forms.ModelForm):
         self.fields["milestone"].queryset = Milestone.objects.filter(project__owner=user).select_related("project")
         self.fields["milestone"].label_from_instance = lambda m: f"{m.project.name} · {m.name}"
         self.fields["category"].queryset = Category.objects.filter(owner=user)
+        self.fields["tags"].queryset = Tag.objects.filter(owner=user)
+        self.fields["tags"].help_text = "Rows are stored in the task_tag junction table."
 
     def clean(self):
         cleaned = super().clean()
@@ -109,3 +115,10 @@ class TaskForm(forms.ModelForm):
         if project and deadline and deadline < project.start_date:
             self.add_error("deadline", f"Deadline is before the project starts ({project.start_date:%b %d, %Y}).")
         return cleaned
+
+
+class TagForm(OwnedNameMixin, forms.ModelForm):
+    class Meta:
+        model = Tag
+        fields = ["name"]
+        widgets = {"name": forms.TextInput(attrs={"placeholder": "e.g. urgent"})}
