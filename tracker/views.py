@@ -58,10 +58,30 @@ def dashboard(request):
         .select_related("project")
         .order_by("deadline", "title")[:8]
     )
+    # Fixed series order = fixed colour slot per status (never re-ranked).
+    chart_order = [Task.Status.IN_PROGRESS, Task.Status.BLOCKED, Task.Status.COMPLETED, Task.Status.PENDING]
+    status_chart = [
+        {"key": s.value, "label": s.label, "count": status_counts.get(s, 0), "slot": i + 1}
+        for i, s in enumerate(chart_order)
+    ]
+    for row in status_chart:
+        row["pct"] = round(100 * row["count"] / total, 1) if total else 0
+    progress_chart = [
+        {"name": p.name, "pct": float(p.completion_pct), "done": p.completed_tasks, "total": p.total_tasks}
+        for p in progress
+    ]
     return render(
         request,
         "tracker/dashboard.html",
-        {"kpi": kpi, "progress": progress, "overdue": overdue, "today": today},
+        {
+            "kpi": kpi,
+            "progress": progress,
+            "overdue": overdue,
+            "today": today,
+            "status_chart": status_chart,
+            "progress_chart": progress_chart,
+            "progress_chart_height": 60 + 44 * len(progress_chart),
+        },
     )
 
 

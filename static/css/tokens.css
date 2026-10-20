@@ -47,11 +47,13 @@
   --warning-soft: #fbf2e1;
   --info-soft: #e5eefb;
 
-  /* Charts */
-  --chart-1: #1f6f50;
-  --chart-2: #4f8fd6;
-  --chart-3: #c08a1e;
-  --chart-4: #b5bcc4;
+  /* Charts: categorical slots in fixed order (validated for colour-vision deficiency) */
+  --chart-1: #2a78d6;
+  --chart-2: #eb6834;
+  --chart-3: #1baf7a;
+  --chart-4: #eda100;
+  --chart-bar: #24855c;
+  --chart-grid: #eceef0;
 
   /* Shape, spacing, type */
   --radius: 10px;
@@ -111,10 +113,12 @@
   --warning-soft: #3a2f1a;
   --info-soft: #1e2f47;
 
-  --chart-1: #3fa57c;
-  --chart-2: #6ea6e6;
-  --chart-3: #e0a93d;
-  --chart-4: #4a525a;
+  --chart-1: #3987e5;
+  --chart-2: #d95926;
+  --chart-3: #199e70;
+  --chart-4: #c98500;
+  --chart-bar: #3fa57c;
+  --chart-grid: #2b3036;
 
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 

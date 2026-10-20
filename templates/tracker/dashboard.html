@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
 <div class="page-head">
@@ -33,6 +34,43 @@
     <div class="kpi-label">Overdue</div>
     <div class="kpi-value">{{ kpi.overdue_tasks }}</div>
     <div class="kpi-sub">open tasks past their deadline</div>
+  </div>
+</div>
+
+<div class="grid grid-2 dash-row">
+  <div class="card">
+    <div class="card-head"><h2>Tasks by status</h2><span class="faint small">{{ kpi.total_tasks }} task{{ kpi.total_tasks|pluralize }}</span></div>
+    <div class="card-body">
+      {% if kpi.total_tasks %}
+      <div class="status-chart">
+        <div class="chart-box chart-doughnut"><canvas id="statusChart" aria-label="Doughnut chart of tasks by status" role="img"></canvas></div>
+        <ul class="chart-legend">
+          {% for s in status_chart %}
+          <li>
+            <span class="swatch" style="background:var(--chart-{{ s.slot }})"></span>
+            <span class="legend-label">{{ s.label }}</span>
+            <span class="legend-value">{{ s.count }}</span>
+            <span class="legend-pct">{{ s.pct }}%</span>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% else %}
+      <div class="muted">Add tasks to see the status breakdown.</div>
+      {% endif %}
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head"><h2>Completion by project</h2><span class="faint small">% of tasks completed</span></div>
+    <div class="card-body">
+      {% if progress_chart %}
+      <div class="chart-box" style="height:{{ progress_chart_height }}px">
+        <canvas id="progressChart" aria-label="Bar chart of completion percentage per project" role="img"></canvas>
+      </div>
+      {% else %}
+      <div class="muted">Create a project to see its progress.</div>
+      {% endif %}
+    </div>
   </div>
 </div>
 
@@ -89,4 +127,11 @@
     {% endif %}
   </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ status_chart|json_script:"status-data" }}
+{{ progress_chart|json_script:"progress-data" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="{% static 'js/dashboard.js' %}"></script>
 {% endblock %}
