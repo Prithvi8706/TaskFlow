@@ -63,8 +63,10 @@ from `sql/`.
 ```
 
 **5. Load the demo data.** This gives you 2 users, 4 projects, 12 milestones and
-60 tasks with tags, dependencies, overdue work and trigger-written history. It
-uses a fixed random seed, so every run produces the same data, with dates
+60 tasks with tags, dependencies, overdue work and trigger-written history. The
+trigger stamps every step at seed time, so the seed then spreads those
+timestamps (and `completed_at`) over each task's lifetime, finishing on or
+before its deadline. It uses a fixed random seed, so every run produces the same data, with dates
 relative to today. Re-running it wipes and reloads the demo users only.
 
 ```bash
@@ -309,8 +311,8 @@ timestamps depend on the day you run it; the rest is fixed by the seed.
 ```
          title          | old_status | new_status  |          changed_at
 ------------------------+------------+-------------+-------------------------------
- Colour and type tokens |            | PENDING     | 2026-10-20 03:57:57.765571+00
- Colour and type tokens | PENDING    | IN_PROGRESS | 2026-10-20 03:57:57.784103+00
+ Colour and type tokens |            | PENDING     | 2026-09-26 06:15:00+00
+ Colour and type tokens | PENDING    | IN_PROGRESS | 2026-10-17 23:33:16.195179+00
 ```
 
 **Q9. Tasks whose prerequisites are not yet completed** (EXISTS subquery)
@@ -339,10 +341,10 @@ timestamps depend on the day you run it; the rest is fixed by the seed.
 ```
          project          | completed_tasks | avg_days | fastest_days | slowest_days
 --------------------------+-----------------+----------+--------------+--------------
- Website Redesign         |               9 |     67.4 |           46 |           79
- Mobile App Launch        |               8 |     30.6 |            1 |           57
- Data Warehouse Migration |               4 |     27.9 |           18 |           41
- All projects             |              21 |     45.8 |            1 |           79
+ Website Redesign         |               9 |     29.0 |            7 |           52
+ Mobile App Launch        |               8 |      8.1 |            0 |           45
+ Data Warehouse Migration |               4 |      7.5 |            2 |           13
+ All projects             |              21 |     16.9 |            0 |           52
 ```
 
 **Q12. Projects above the overall average completion** (nested subquery)

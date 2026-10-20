@@ -194,3 +194,26 @@ class CrossProjectCycleTests(TestCase):
         form = TaskDependencyForm({"depends_on_task": self.y.pk}, task=self.x)  # X needs Y closes the loop
         self.assertFalse(form.is_valid())
         self.assertIn("cycle", str(form.errors))
+
+
+class SeedTimelineTests(TestCase):
+    """Health-check issue 3: seeded history should look like real work over time."""
+
+    def test_history_and_completed_at_are_spread_over_the_task_lifetime(self):
+        from django.utils import timezone
+
+        from tracker.models import TaskHistory
+
+        call_command("seed_demo", stdout=io.StringIO())
+        now = timezone.now()
+        for task in Task.objects.prefetch_related("history"):
+            stamps = [h.changed_at for h in task.history.order_by("history_id")]
+            self.assertEqual(stamps, sorted(stamps), task.title)  # chronological
+            self.assertEqual(stamps[0], task.created_at, task.title)  # first row = creation
+            self.assertLessEqual(stamps[-1], now, task.title)
+            if task.status == Task.Status.COMPLETED:
+                self.assertEqual(task.completed_at, stamps[-1], task.title)
+                self.assertLessEqual(timezone.localtime(task.completed_at).date(), task.deadline, task.title)
+        # Steps are no longer all stamped at seed time.
+        distinct_days = {h.changed_at.date() for h in TaskHistory.objects.all()}
+        self.assertGreater(len(distinct_days), 20)

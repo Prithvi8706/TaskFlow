@@ -9,7 +9,10 @@ between runs; dates are relative to today so some tasks are always overdue.
 
 Tasks are inserted as PENDING and then moved through their statuses with
 ordinary UPDATEs, so the database trigger writes task_history and stamps
-completed_at exactly as it would for a real user.
+completed_at exactly as it would for a real user. Because that all happens in
+one run, the trigger-written timestamps are then spread back over each task's
+lifetime (creation -> on or before its deadline), so the history timeline and
+"average days to complete" look like work done over weeks, not milliseconds.
 """
 
 import datetime as dt
@@ -222,6 +225,10 @@ class Command(BaseCommand):
                 task.status = step
                 task.save(update_fields=["status"])
 
+        # 4b. Spread the trigger-written timestamps over each task's lifetime.
+        for i, (task, target) in enumerate(zip(tasks, final)):
+            _backdate_history(task, target, random.Random(f"{SEED}:{name}:{i}"), now)
+
         # 5. Milestone status follows its tasks.
         for milestone in milestones:
             statuses = list(milestone.tasks.values_list("status", flat=True))
@@ -258,6 +265,36 @@ def _at(day, rng):
     """A timezone-aware datetime on `day` during working hours."""
     naive = dt.datetime.combine(day, dt.time(rng.randint(8, 18), rng.choice([0, 15, 30, 45])))
     return timezone.make_aware(naive)
+
+
+def _backdate_history(task, target, rng, now):
+    """
+    Re-time the task_history rows the trigger just wrote (all stamped "now")
+    so they run from the task's creation to a plausible finish, and make
+    completed_at match the final COMPLETED step. Row order is unchanged.
+    """
+    rows = list(TaskHistory.objects.filter(task=task).order_by("history_id"))
+    start = task.created_at
+    if target == Task.Status.COMPLETED:
+        finish_day = task.deadline - dt.timedelta(days=rng.randint(0, 4))
+        finish = timezone.make_aware(dt.datetime.combine(finish_day, dt.time(rng.randint(9, 17), rng.randint(0, 59))))
+    else:
+        finish = now - dt.timedelta(hours=rng.randint(2, 72))
+    finish = min(max(finish, start + dt.timedelta(hours=2)), now - dt.timedelta(minutes=5))
+
+    steps = len(rows) - 1
+    stamps = [start]
+    for j in range(1, steps + 1):
+        if j == steps:
+            stamps.append(finish)
+        else:
+            share = (j + rng.uniform(-0.3, 0.3)) / steps
+            stamps.append(max(stamps[-1], start + (finish - start) * share))
+    for row, stamp in zip(rows, stamps):
+        TaskHistory.objects.filter(pk=row.pk).update(changed_at=stamp)
+    if target == Task.Status.COMPLETED:
+        # Status is unchanged, so trg_task_completed_at keeps this value.
+        Task.objects.filter(pk=task.pk).update(completed_at=finish)
 
 
 def _status_path(target, rng):
