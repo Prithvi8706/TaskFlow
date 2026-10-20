@@ -45,7 +45,7 @@
         <dt>Tags</dt><dd>{% for tag in task.tags.all %}<span class="tag-chip">#{{ tag.name }}</span> {% empty %}—{% endfor %}</dd>
         <dt>Deadline</dt><dd class="{% if task.is_overdue %}overdue{% endif %}">{{ task.deadline|date:"M j, Y"|default:"—" }}{% if task.is_overdue %} · overdue{% endif %}</dd>
         <dt>Created</dt><dd>{{ task.created_at|date:"M j, Y H:i" }}</dd>
-        <dt>Completed</dt><dd>{{ task.completed_at|date:"M j, Y H:i"|default:"—" }}</dd>
+        <dt>Completed</dt><dd>{{ task.completed_at|date:"M j, Y H:i"|default:"—" }}{% if task.completed_at %} <span class="faint small">· set by trigger</span>{% endif %}</dd>
       </dl>
     </div>
   </div>
@@ -95,6 +95,36 @@
     </tbody></table>
     {% else %}
     <div class="card-body muted">No tasks depend on this one.</div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card" style="margin-top:24px">
+  <div class="card-head">
+    <h2>Status history</h2>
+    <span class="faint small">written by trigger <code>trg_task_status_history</code></span>
+  </div>
+  <div class="card-body">
+    {% if history %}
+    <ol class="timeline">
+      {% for h in history %}
+      <li>
+        <div class="timeline-dot badge-{{ h.new_status }}"></div>
+        <div>
+          {% if h.old_status %}
+            <span class="badge badge-{{ h.old_status }}">{{ h.get_old_status_display }}</span>
+            <span class="faint">→</span>
+          {% else %}
+            <span class="muted small">Created as</span>
+          {% endif %}
+          <span class="badge badge-{{ h.new_status }}">{{ h.get_new_status_display }}</span>
+          <div class="faint small">{{ h.changed_at|date:"M j, Y · H:i:s" }}</div>
+        </div>
+      </li>
+      {% endfor %}
+    </ol>
+    {% else %}
+    <div class="muted">No status changes recorded.</div>
     {% endif %}
   </div>
 </div>

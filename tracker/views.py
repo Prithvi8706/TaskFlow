@@ -238,6 +238,7 @@ def render_task_detail(request, task, dep_form):
             "dependents": dependents,
             "dep_form": dep_form,
             "status_choices": Task.Status.choices,
+            "history": task.history.order_by("-changed_at", "-history_id"),
         },
     )
 
