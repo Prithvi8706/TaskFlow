@@ -184,3 +184,29 @@ class TaskTag(models.Model):
 
     def __str__(self):
         return f"{self.task} #{self.tag}"
+
+
+class TaskDependency(models.Model):
+    """
+    Recursive M:N on task: `task` cannot start until `depends_on_task` is completed.
+
+    The CHECK constraint stops a task depending on itself. Longer cycles
+    (A -> B -> A) span several rows, which a CHECK cannot see, so those are
+    rejected in the application layer (see TaskDependencyForm.clean).
+    """
+
+    dependency_id = models.BigAutoField(primary_key=True)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="prerequisite_links")
+    depends_on_task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="dependent_links")
+
+    class Meta:
+        db_table = "task_dependency"
+        constraints = [
+            models.UniqueConstraint(fields=["task", "depends_on_task"], name="uq_task_dependency"),
+            models.CheckConstraint(
+                condition=~Q(task=F("depends_on_task")), name="ck_task_dependency_not_self"
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.task} depends on {self.depends_on_task}"
