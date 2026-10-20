@@ -3,6 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Case, Count, F, IntegerField, Q, Value, When
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.http import require_POST
 
 from .forms import (
     CategoryForm,
@@ -52,7 +54,13 @@ def project_detail(request, pk):
     return render(
         request,
         "tracker/project_detail.html",
-        {"project": project, "tasks": tasks, "milestones": milestones, "counts": counts},
+        {
+            "project": project,
+            "tasks": tasks,
+            "milestones": milestones,
+            "counts": counts,
+            "status_choices": Task.Status.choices,
+        },
     )
 
 
@@ -206,7 +214,9 @@ def task_list(request):
     form, tasks = filtered_tasks(request)
     is_filtered = any(v for k, v in request.GET.items() if k != "sort")
     return render(
-        request, "tracker/task_list.html", {"tasks": tasks, "filter_form": form, "is_filtered": is_filtered}
+        request,
+        "tracker/task_list.html",
+        {"tasks": tasks, "filter_form": form, "is_filtered": is_filtered, "status_choices": Task.Status.choices},
     )
 
 
@@ -227,8 +237,31 @@ def render_task_detail(request, task, dep_form):
             "prerequisites": prerequisites,
             "dependents": dependents,
             "dep_form": dep_form,
+            "status_choices": Task.Status.choices,
         },
     )
+
+
+@login_required
+@require_POST
+def task_status_update(request, pk):
+    """Quick status change from the task list or task page."""
+    task = get_object_or_404(user_tasks(request.user), pk=pk)
+    new_status = request.POST.get("status")
+    if new_status not in Task.Status.values:
+        messages.error(request, "Unknown status.")
+    elif new_status == Task.Status.COMPLETED and task.open_prerequisites():
+        names = ", ".join(t.title for t in task.open_prerequisites())
+        messages.error(request, f"“{task.title}” is waiting on: {names}.")
+    elif new_status != task.status:
+        task.status = new_status
+        task.save(update_fields=["status"])
+        messages.success(request, f"“{task.title}” moved to {task.get_status_display()}.")
+
+    next_url = request.POST.get("next")
+    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+        return redirect(next_url)
+    return redirect("task_detail", pk=task.pk)
 
 
 @login_required

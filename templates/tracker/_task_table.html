@@ -12,7 +12,18 @@
         </div>
       </td>
       {% if show_project %}<td><a class="muted" href="{% url 'project_detail' t.project_id %}">{{ t.project.name }}</a></td>{% endif %}
-      <td><span class="badge badge-{{ t.status }}">{{ t.get_status_display }}</span></td>
+      <td>
+        <form method="post" action="{% url 'task_status_update' t.pk %}" class="status-form">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <select name="status" class="status-select badge-{{ t.status }}" data-autosubmit aria-label="Status of {{ t.title }}">
+            {% for value, label in status_choices %}
+            <option value="{{ value }}"{% if value == t.status %} selected{% endif %}{% if value == "COMPLETED" and t.open_prereqs and t.status != "COMPLETED" %} disabled{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+          <noscript><button class="btn btn-sm" type="submit">Set</button></noscript>
+        </form>
+      </td>
       <td><span class="priority priority-{{ t.priority }}">{{ t.get_priority_display }}</span></td>
       <td class="muted">{{ t.milestone.name|default:"—" }}</td>
       <td class="{% if t.is_overdue %}overdue{% else %}muted{% endif %}">{{ t.deadline|date:"M j, Y"|default:"—" }}</td>

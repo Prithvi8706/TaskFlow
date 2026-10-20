@@ -16,6 +16,7 @@ urlpatterns = [
     path("tasks/<int:pk>/", views.task_detail, name="task_detail"),
     path("tasks/<int:pk>/edit/", views.task_edit, name="task_edit"),
     path("tasks/<int:pk>/delete/", views.task_delete, name="task_delete"),
+    path("tasks/<int:pk>/status/", views.task_status_update, name="task_status_update"),
     path("tasks/<int:pk>/dependencies/add/", views.dependency_add, name="dependency_add"),
     path("dependencies/<int:pk>/delete/", views.dependency_delete, name="dependency_delete"),
     path("categories/", views.category_list, name="category_list"),

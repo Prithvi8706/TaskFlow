@@ -311,3 +311,21 @@ table.table { width: 100%; border-collapse: collapse; }
   .filter-search { grid-column: 1 / -1; }
 }
 .filter-bar + .card { margin-top: 0; }
+
+/* ---------- Quick status ---------- */
+
+.status-form { margin: 0; }
+.status-select {
+  width: auto;
+  padding: 2px 24px 2px 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.status-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-4); margin-bottom: var(--space-5); }
+.status-bar form { margin: 0; }
+.status-bar .is-current { background: var(--accent); border-color: var(--accent); color: var(--accent-contrast); opacity: 1; }
+.btn:disabled { cursor: not-allowed; opacity: 0.55; }
+.status-bar .btn.is-current:disabled { opacity: 1; cursor: default; }

@@ -16,6 +16,18 @@
   </div>
 </div>
 
+<div class="card status-bar">
+  <span class="muted small">Move to</span>
+  {% for value, label in status_choices %}
+  <form method="post" action="{% url 'task_status_update' task.pk %}">
+    {% csrf_token %}
+    <input type="hidden" name="status" value="{{ value }}">
+    <button type="submit" class="btn btn-sm{% if value == task.status %} is-current{% endif %}"
+      {% if value == task.status %}disabled aria-current="true"{% elif value == "COMPLETED" and task.open_prereqs %}disabled title="Prerequisites still open"{% endif %}>{{ label }}</button>
+  </form>
+  {% endfor %}
+</div>
+
 {% if task.open_prereqs and task.status != "COMPLETED" %}
 <div class="notice notice-warning">
   Blocked: {{ task.open_prereqs }} prerequisite{{ task.open_prereqs|pluralize }} still open. It cannot be marked completed until they are done.
