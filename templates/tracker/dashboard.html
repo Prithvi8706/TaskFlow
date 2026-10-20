@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Good to see you, {{ user.first_name|default:user.username }}</h1>
+    <p>{{ today|date:"l, F j" }} · here is where your projects stand.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn" href="{% url 'project_create' %}">New project</a>
+    <a class="btn btn-primary" href="{% url 'task_create' %}">New task</a>
+  </div>
+</div>
+
+<div class="grid grid-4 kpis">
+  <div class="card kpi">
+    <div class="kpi-label">Active projects</div>
+    <div class="kpi-value">{{ kpi.active_projects }}</div>
+    <div class="kpi-sub">of {{ kpi.projects }} total</div>
+  </div>
+  <div class="card kpi">
+    <div class="kpi-label">Tasks completed</div>
+    <div class="kpi-value">{{ kpi.completed_tasks }}<span class="kpi-unit">/ {{ kpi.total_tasks }}</span></div>
+    <div class="progress" style="margin-top:8px"><span style="width:{{ kpi.completion_pct|stringformat:'s' }}%"></span></div>
+    <div class="kpi-sub">{{ kpi.completion_pct }}% overall</div>
+  </div>
+  <div class="card kpi">
+    <div class="kpi-label">In progress</div>
+    <div class="kpi-value">{{ kpi.in_progress }}</div>
+    <div class="kpi-sub">{{ kpi.blocked }} blocked · {{ kpi.pending }} pending</div>
+  </div>
+  <div class="card kpi{% if kpi.overdue_tasks %} kpi-alert{% endif %}">
+    <div class="kpi-label">Overdue</div>
+    <div class="kpi-value">{{ kpi.overdue_tasks }}</div>
+    <div class="kpi-sub">open tasks past their deadline</div>
+  </div>
+</div>
+
+<div class="grid grid-2 dash-row">
+  <div class="card">
+    <div class="card-head">
+      <h2>Project progress</h2>
+      <span class="faint small">view <code>v_project_progress</code></span>
+    </div>
+    {% if progress %}
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Project</th><th>Progress</th><th class="num">Overdue</th></tr></thead>
+      <tbody>
+      {% for row in progress %}
+        <tr>
+          <td><a href="{% url 'project_detail' row.project_id %}"><strong>{{ row.name }}</strong></a></td>
+          <td style="min-width:150px">
+            <div class="progress"><span style="width:{{ row.completion_pct|stringformat:'s' }}%"></span></div>
+            <div class="faint small">{{ row.completion_pct }}% · {{ row.completed_tasks }}/{{ row.total_tasks }}</div>
+          </td>
+          <td class="num{% if row.overdue_tasks %} overdue{% endif %}">{{ row.overdue_tasks }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    {% else %}
+    <div class="card-body muted">No projects yet.</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h2>Overdue tasks</h2>
+      {% if overdue %}<a class="small" href="{% url 'analytics' %}#q3">See query Q3</a>{% endif %}
+    </div>
+    {% if overdue %}
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Task</th><th>Due</th><th class="num">Late by</th></tr></thead>
+      <tbody>
+      {% for t in overdue %}
+        <tr>
+          <td>
+            <a href="{% url 'task_detail' t.pk %}"><strong>{{ t.title }}</strong></a>
+            <div class="faint small">{{ t.project.name }} · <span class="priority priority-{{ t.priority }}">{{ t.get_priority_display }}</span></div>
+          </td>
+          <td class="muted">{{ t.deadline|date:"M j" }}</td>
+          <td class="num overdue">{{ t.deadline|timesince:today }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    {% else %}
+    <div class="card-body muted">Nothing overdue.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

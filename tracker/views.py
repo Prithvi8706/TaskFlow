@@ -1,9 +1,10 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.db.models import Case, Count, F, IntegerField, Q, Value, When
+from django.db.models import Case, Count, F, IntegerField, Q, Sum, Value, When
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
@@ -19,6 +20,49 @@ from .forms import (
     TaskForm,
 )
 from .models import Category, Milestone, MilestoneProgress, Project, ProjectProgress, Tag, Task, TaskDependency
+
+
+# --------------------------------------------------------------- dashboard
+
+
+@login_required
+def dashboard(request):
+    today = timezone.localdate()
+    # Per-project numbers come from the v_project_progress view.
+    progress = ProjectProgress.objects.filter(owner=request.user).order_by("-completion_pct", "name")
+    totals = progress.aggregate(
+        total=Sum("total_tasks"), completed=Sum("completed_tasks"), overdue=Sum("overdue_tasks")
+    )
+    status_counts = dict(
+        Task.objects.filter(project__owner=request.user)
+        .values_list("status")
+        .annotate(n=Count("task_id"))
+        .values_list("status", "n")
+    )
+    total = totals["total"] or 0
+    completed = totals["completed"] or 0
+    kpi = {
+        "projects": len(progress),
+        "active_projects": Project.objects.filter(owner=request.user, status=Project.Status.ACTIVE).count(),
+        "total_tasks": total,
+        "completed_tasks": completed,
+        "completion_pct": round(100 * completed / total, 1) if total else 0,
+        "overdue_tasks": totals["overdue"] or 0,
+        "in_progress": status_counts.get(Task.Status.IN_PROGRESS, 0),
+        "blocked": status_counts.get(Task.Status.BLOCKED, 0),
+        "pending": status_counts.get(Task.Status.PENDING, 0),
+    }
+    overdue = (
+        Task.objects.filter(project__owner=request.user, deadline__lt=today)
+        .exclude(status=Task.Status.COMPLETED)
+        .select_related("project")
+        .order_by("deadline", "title")[:8]
+    )
+    return render(
+        request,
+        "tracker/dashboard.html",
+        {"kpi": kpi, "progress": progress, "overdue": overdue, "today": today},
+    )
 
 
 # ---------------------------------------------------------------- projects
