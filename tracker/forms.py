@@ -54,6 +54,31 @@ class ProjectForm(OwnedNameMixin, forms.ModelForm):
         return cleaned
 
 
+class ProjectCreateForm(ProjectForm):
+    """Project form with optional initial milestones, saved atomically by the view."""
+
+    initial_milestones = forms.CharField(
+        required=False,
+        label="Initial milestones",
+        widget=forms.Textarea(attrs={"rows": 3, "placeholder": "Design\nBuild\nLaunch"}),
+        help_text="One per line. The project and its milestones are created in a single transaction.",
+    )
+
+    def clean_initial_milestones(self):
+        names, seen = [], set()
+        for line in self.cleaned_data["initial_milestones"].splitlines():
+            name = line.strip()
+            if not name:
+                continue
+            if len(name) > 120:
+                raise forms.ValidationError(f"“{name[:30]}…” is longer than 120 characters.")
+            if name.lower() in seen:
+                raise forms.ValidationError(f"“{name}” is listed twice.")
+            seen.add(name.lower())
+            names.append(name)
+        return names
+
+
 class MilestoneForm(forms.ModelForm):
     class Meta:
         model = Milestone

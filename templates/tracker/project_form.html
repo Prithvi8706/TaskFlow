@@ -18,6 +18,7 @@
       <div></div>
       {% include "partials/field.html" with field=form.start_date %}
       {% include "partials/field.html" with field=form.deadline %}
+      {% if form.initial_milestones %}{% include "partials/field.html" with field=form.initial_milestones full=True %}{% endif %}
     </div>
     <div class="form-actions">
       <a class="btn" href="{% if project %}{% url 'project_detail' project.pk %}{% else %}{% url 'project_list' %}{% endif %}">Cancel</a>

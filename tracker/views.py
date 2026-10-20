@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.db.models import Case, Count, F, IntegerField, Q, Value, When
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -9,6 +10,7 @@ from django.views.decorators.http import require_POST
 from .forms import (
     CategoryForm,
     MilestoneForm,
+    ProjectCreateForm,
     ProjectForm,
     TagForm,
     TaskDependencyForm,
@@ -54,10 +56,17 @@ def project_detail(request, pk):
 
 @login_required
 def project_create(request):
-    form = ProjectForm(request.POST or None, owner=request.user)
+    form = ProjectCreateForm(request.POST or None, owner=request.user)
     if request.method == "POST" and form.is_valid():
-        project = form.save()
-        messages.success(request, f"Project “{project.name}” created.")
+        # One transaction: if any milestone INSERT fails, the project INSERT is
+        # rolled back too, so a half-created project can never exist.
+        with transaction.atomic():
+            project = form.save()
+            Milestone.objects.bulk_create(
+                Milestone(project=project, name=name) for name in form.cleaned_data["initial_milestones"]
+            )
+        count = len(form.cleaned_data["initial_milestones"])
+        messages.success(request, f"Project “{project.name}” created with {count} milestone{'s' if count != 1 else ''}.")
         return redirect("project_detail", pk=project.pk)
     return render(request, "tracker/project_form.html", {"form": form})
 
