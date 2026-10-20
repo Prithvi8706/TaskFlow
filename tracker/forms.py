@@ -139,6 +139,15 @@ class TaskForm(forms.ModelForm):
             self.add_error("milestone", "This milestone belongs to a different project.")
         if project and deadline and deadline < project.start_date:
             self.add_error("deadline", f"Deadline is before the project starts ({project.start_date:%b %d, %Y}).")
+        if (
+            project
+            and self.instance.pk
+            and project.pk != self.instance.project_id
+            and (self.instance.prerequisite_links.exists() or self.instance.dependent_links.exists())
+        ):
+            # Dependencies are kept within one project; moving a linked task would
+            # leave links the cycle check of the new project cannot see.
+            self.add_error("project", "Remove this task's prerequisites and dependents before moving it to another project.")
         if cleaned.get("status") == Task.Status.COMPLETED and self.instance.pk:
             open_prereqs = self.instance.open_prerequisites()
             if open_prereqs:
@@ -192,8 +201,10 @@ class TaskDependencyForm(forms.Form):
             raise forms.ValidationError("This prerequisite is already linked.")
 
         # Adding task -> prereq creates a cycle if task is already reachable from prereq.
+        # Load every link the owner has, so a link that crosses projects is still seen.
         edges = {}
-        for t_id, d_id in TaskDependency.objects.filter(task__project=self.task.project).values_list(
+        owner_id = self.task.project.owner_id
+        for t_id, d_id in TaskDependency.objects.filter(task__project__owner_id=owner_id).values_list(
             "task_id", "depends_on_task_id"
         ):
             edges.setdefault(t_id, []).append(d_id)

@@ -9,7 +9,7 @@ from django.db import IntegrityError
 from django.test import TestCase
 
 from tracker.analytics import load_queries, run_queries
-from tracker.forms import TaskDependencyForm
+from tracker.forms import TaskDependencyForm, TaskForm
 from tracker.models import Milestone, Project, Task, TaskDependency
 
 from .factories import make_project, make_task, make_user
@@ -156,3 +156,41 @@ class SeedCommandTests(TestCase):
         self.assertEqual(first, second)
         self.assertEqual(Project.objects.count(), 4)
         self.assertEqual(Milestone.objects.count(), 12)
+
+
+class CrossProjectCycleTests(TestCase):
+    """Health-check issue 1: links that span projects must not hide a cycle."""
+
+    def setUp(self):
+        self.user = make_user()
+        self.p1 = make_project(self.user, name="P1")
+        self.p2 = make_project(self.user, name="P2")
+        self.x = make_task(self.p1, "X")
+        self.y = make_task(self.p1, "Y")
+
+    def test_moving_a_task_with_dependencies_to_another_project_is_rejected(self):
+        TaskDependency.objects.create(task=self.y, depends_on_task=self.x)
+        form = TaskForm(
+            {"title": "Y", "project": self.p2.pk, "priority": "MEDIUM", "status": "PENDING"},
+            instance=self.y,
+            user=self.user,
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn("project", form.errors)
+
+    def test_moving_a_task_without_dependencies_is_allowed(self):
+        form = TaskForm(
+            {"title": "Y", "project": self.p2.pk, "priority": "MEDIUM", "status": "PENDING"},
+            instance=self.y,
+            user=self.user,
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_cycle_through_a_cross_project_link_is_detected(self):
+        z = make_task(self.p2, "Z")
+        # Pre-existing links that cross projects (e.g. created before the move rule).
+        TaskDependency.objects.create(task=self.y, depends_on_task=z)  # Y needs Z (P2)
+        TaskDependency.objects.create(task=z, depends_on_task=self.x)  # Z needs X
+        form = TaskDependencyForm({"depends_on_task": self.y.pk}, task=self.x)  # X needs Y closes the loop
+        self.assertFalse(form.is_valid())
+        self.assertIn("cycle", str(form.errors))
