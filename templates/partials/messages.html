@@ -1,0 +1,10 @@
+{% if messages %}
+<div class="messages" aria-live="polite">
+  {% for message in messages %}
+  <div class="message message-{{ message.tags|default:'info' }}" role="{% if message.level >= 40 %}alert{% else %}status{% endif %}">
+    <span>{{ message }}</span>
+    <button type="button" class="message-close" data-dismiss aria-label="Dismiss">&times;</button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}

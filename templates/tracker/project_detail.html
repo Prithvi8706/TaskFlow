@@ -54,7 +54,8 @@
     </tbody>
   </table></div>
   {% else %}
-  <div class="card-body muted">No milestones in this project yet.</div>
+  {% url 'milestone_create' project.pk as ms_url %}
+  {% include "partials/empty.html" with title="No milestones yet" text="Milestones split the project into checkpoints." action_url=ms_url action_label="Add a milestone" %}
   {% endif %}
 </div>
 
@@ -63,7 +64,7 @@
   {% if tasks %}
   {% include "tracker/_task_table.html" %}
   {% else %}
-  <div class="card-body muted">No tasks in this project yet.</div>
+  {% include "partials/empty.html" with title="No tasks in this project" text="Use “Add task” above to create the first one." %}
   {% endif %}
 </div>
 {% endblock %}

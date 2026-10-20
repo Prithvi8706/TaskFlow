@@ -65,7 +65,7 @@
         <td><a href="{% url 'task_detail' d.depends_on_task_id %}">{{ d.depends_on_task.title }}</a></td>
         <td><span class="badge badge-{{ d.depends_on_task.status }}">{{ d.depends_on_task.get_status_display }}</span></td>
         <td class="row-actions">
-          <form method="post" action="{% url 'dependency_delete' d.pk %}">{% csrf_token %}<button class="btn btn-sm btn-ghost" type="submit">Remove</button></form>
+          <form method="post" action="{% url 'dependency_delete' d.pk %}" data-confirm="Remove “{{ d.depends_on_task.title }}” as a prerequisite?">{% csrf_token %}<button class="btn btn-sm btn-ghost" type="submit">Remove</button></form>
         </td>
       </tr>
       {% endfor %}

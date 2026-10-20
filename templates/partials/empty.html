@@ -1,0 +1,8 @@
+<div class="empty">
+  <div class="empty-icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+  </div>
+  <div class="empty-title">{{ title }}</div>
+  {% if text %}<p class="empty-text">{{ text }}</p>{% endif %}
+  {% if action_url %}<a class="btn btn-primary btn-sm" href="{{ action_url }}">{{ action_label }}</a>{% endif %}
+</div>

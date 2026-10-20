@@ -56,7 +56,8 @@
         </ul>
       </div>
       {% else %}
-      <div class="muted">Add tasks to see the status breakdown.</div>
+      {% url 'task_create' as new_task_url %}
+      {% include "partials/empty.html" with title="No tasks yet" text="The status breakdown appears once you add tasks." action_url=new_task_url action_label="Create a task" %}
       {% endif %}
     </div>
   </div>
@@ -68,7 +69,8 @@
         <canvas id="progressChart" aria-label="Bar chart of completion percentage per project" role="img"></canvas>
       </div>
       {% else %}
-      <div class="muted">Create a project to see its progress.</div>
+      {% url 'project_create' as new_project_url %}
+      {% include "partials/empty.html" with title="No projects yet" text="Completion per project appears here." action_url=new_project_url action_label="Create a project" %}
       {% endif %}
     </div>
   </div>
@@ -97,7 +99,7 @@
       </tbody>
     </table></div>
     {% else %}
-    <div class="card-body muted">No projects yet.</div>
+    {% include "partials/empty.html" with title="No projects yet" text="Progress from v_project_progress shows up here." %}
     {% endif %}
   </div>
 
@@ -123,7 +125,7 @@
       </tbody>
     </table></div>
     {% else %}
-    <div class="card-body muted">Nothing overdue.</div>
+    {% include "partials/empty.html" with title="Nothing overdue" text="Every open task is still within its deadline." %}
     {% endif %}
   </div>
 </div>

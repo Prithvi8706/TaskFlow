@@ -27,7 +27,13 @@
   {% if tasks %}
     {% include "tracker/_task_table.html" with show_project=True %}
   {% else %}
-    <div class="card-body muted">{% if is_filtered %}No tasks match these filters.{% else %}No tasks yet.{% endif %}</div>
+    {% if is_filtered %}
+      {% url 'task_list' as reset_url %}
+      {% include "partials/empty.html" with title="No tasks match these filters" text="Try a different search term or clear the filters." action_url=reset_url action_label="Clear filters" %}
+    {% else %}
+      {% url 'task_create' as new_url %}
+      {% include "partials/empty.html" with title="No tasks yet" text="Add a task to a project to start tracking work." action_url=new_url action_label="Create a task" %}
+    {% endif %}
   {% endif %}
 </div>
 {% endblock %}

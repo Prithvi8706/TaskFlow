@@ -24,7 +24,7 @@
       </tbody>
     </table></div>
     {% else %}
-    <div class="card-body muted">No categories yet.</div>
+    {% include "partials/empty.html" with title="No categories yet" text="Add one on the right, e.g. Backend or Design." %}
     {% endif %}
   </div>
 

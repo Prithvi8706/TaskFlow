@@ -35,7 +35,8 @@
     </table>
   </div>
   {% else %}
-  <div class="card-body muted">No projects yet.</div>
+  {% url 'project_create' as new_url %}
+  {% include "partials/empty.html" with title="No projects yet" text="Projects group your milestones and tasks. Create one to get started." action_url=new_url action_label="Create a project" %}
   {% endif %}
 </div>
 {% endblock %}
