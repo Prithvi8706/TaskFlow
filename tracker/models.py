@@ -210,3 +210,27 @@ class TaskDependency(models.Model):
 
     def __str__(self):
         return f"{self.task} depends on {self.depends_on_task}"
+
+
+class TaskHistory(models.Model):
+    """
+    Audit trail of task status changes.
+
+    Rows are written only by the PostgreSQL trigger `trg_task_status_history`
+    (see sql/triggers.sql); the application never inserts into this table.
+    """
+
+    history_id = models.BigAutoField(primary_key=True)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="history")
+    old_status = models.CharField(max_length=12, choices=Task.Status.choices, null=True, blank=True)
+    new_status = models.CharField(max_length=12, choices=Task.Status.choices)
+    changed_at = models.DateTimeField(db_default=Now())
+
+    class Meta:
+        db_table = "task_history"
+        ordering = ["changed_at", "history_id"]
+        verbose_name_plural = "task history"
+        indexes = [models.Index(fields=["task", "changed_at"], name="ix_task_history_task_time")]
+
+    def __str__(self):
+        return f"{self.task}: {self.old_status} -> {self.new_status}"
