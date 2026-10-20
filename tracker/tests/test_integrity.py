@@ -86,6 +86,20 @@ class ForeignKeyTests(TestCase):
         self.assertFalse(Task.objects.filter(pk=task.pk).exists())
         self.assertFalse(TaskHistory.objects.filter(task_id=task.pk).exists())
 
+    def test_delete_user_cascades_in_raw_sql(self):
+        # Health-check issue 2: owner FKs must cascade in the database too.
+        from tracker.models import Category, Tag
+
+        Category.objects.create(owner=self.user, name="Ops")
+        Tag.objects.create(owner=self.user, name="urgent")
+        task = make_task(self.project)
+        raw("SET CONSTRAINTS ALL IMMEDIATE")
+        raw("DELETE FROM auth_user WHERE id = %s", [self.user.pk])
+        self.assertFalse(Project.objects.filter(pk=self.project.pk).exists())
+        self.assertFalse(Category.objects.filter(owner_id=self.user.pk).exists())
+        self.assertFalse(Tag.objects.filter(owner_id=self.user.pk).exists())
+        self.assertFalse(Task.objects.filter(pk=task.pk).exists())
+
     def test_delete_milestone_sets_task_milestone_null_in_raw_sql(self):
         milestone = make_milestone(self.project)
         task = make_task(self.project, milestone=milestone)

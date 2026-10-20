@@ -32,12 +32,12 @@ erDiagram
     }
     CATEGORY {
         bigint   category_id PK
-        int      owner_id FK
+        int      owner_id FK "ON DELETE CASCADE"
         varchar  name "UNIQUE(owner_id, name)"
     }
     PROJECT {
         bigint      project_id PK
-        int         owner_id FK
+        int         owner_id FK "ON DELETE CASCADE"
         varchar     name "UNIQUE(owner_id, name)"
         text        description
         date        start_date
@@ -68,7 +68,7 @@ erDiagram
     }
     TAG {
         bigint   tag_id PK
-        int      owner_id FK
+        int      owner_id FK "ON DELETE CASCADE"
         varchar  name "UNIQUE(owner_id, name)"
     }
     TASK_TAG {
@@ -101,16 +101,16 @@ erDiagram
 
 The other relationships: project 1:N milestone (cascade), milestone 0..1:N task
 (`SET NULL`, so deleting a milestone keeps its tasks), category 0..1:N task
-(`SET NULL`), and user 1:N project/category/tag.
+(`SET NULL`), and user 1:N project/category/tag (cascade).
 
 ## Relational schema
 
 Underline = primary key, *italic* = foreign key.
 
 - **auth_user** (<u>id</u>, username, email, password, …)
-- **category** (<u>category_id</u>, *owner_id* → auth_user, name)
+- **category** (<u>category_id</u>, *owner_id* → auth_user ON DELETE CASCADE, name)
   - UNIQUE (owner_id, name)
-- **project** (<u>project_id</u>, *owner_id* → auth_user, name, description, start_date, deadline, status, created_at)
+- **project** (<u>project_id</u>, *owner_id* → auth_user ON DELETE CASCADE, name, description, start_date, deadline, status, created_at)
   - UNIQUE (owner_id, name)
   - CHECK (deadline >= start_date)
   - CHECK (status IN ('PLANNED','ACTIVE','COMPLETED','ON_HOLD'))
@@ -120,7 +120,7 @@ Underline = primary key, *italic* = foreign key.
 - **task** (<u>task_id</u>, *project_id* → project ON DELETE CASCADE, *milestone_id* → milestone ON DELETE SET NULL, *category_id* → category ON DELETE SET NULL, title, description, priority, status, created_at, deadline, completed_at)
   - CHECK (priority IN ('LOW','MEDIUM','HIGH'))
   - CHECK (status IN ('PENDING','IN_PROGRESS','BLOCKED','COMPLETED'))
-- **tag** (<u>tag_id</u>, *owner_id* → auth_user, name)
+- **tag** (<u>tag_id</u>, *owner_id* → auth_user ON DELETE CASCADE, name)
   - UNIQUE (owner_id, name)
 - **task_tag** (<u>task_tag_id</u>, *task_id* → task ON DELETE CASCADE, *tag_id* → tag ON DELETE CASCADE)
   - UNIQUE (task_id, tag_id): the composite natural key
@@ -137,10 +137,12 @@ enforced with a UNIQUE constraint.
 ### Why the ON DELETE actions live in the database
 
 Django normally emulates `on_delete` in Python and creates plain foreign keys.
-Migrations `0003`, `0005`, `0007` and `0009` replace those with named foreign
+Migrations `0003`, `0005`, `0007`, `0009` and `0012` replace those with named foreign
 keys that carry real `ON DELETE CASCADE` / `SET NULL`, so a `DELETE` typed in
-psql behaves exactly like one issued by the app. `tracker/tests/test_integrity.py`
-checks this with raw SQL deletes.
+psql behaves exactly like one issued by the app; deleting a user in psql removes
+their projects, categories and tags, and everything under them. (Django's own
+auth tables, such as group memberships and the admin log, keep Django's defaults.)
+`tracker/tests/test_integrity.py` checks this with raw SQL deletes.
 
 ## Database objects beyond tables
 
