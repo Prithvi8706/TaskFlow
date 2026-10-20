@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Analytics{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Analytics</h1>
+    <p>{{ results|length }} SQL queries from <code>sql/queries.sql</code>, run live against PostgreSQL in a read-only transaction and scoped to your account.</p>
+  </div>
+</div>
+
+<div class="analytics-layout">
+  <aside class="card analytics-toc">
+    <div class="card-head"><h2>Queries</h2></div>
+    <ol>
+      {% for r in results %}
+      <li><a href="#q{{ r.query.number }}"><span class="faint">Q{{ r.query.number }}</span> {{ r.query.title }}</a></li>
+      {% endfor %}
+    </ol>
+  </aside>
+
+  <div class="analytics-main">
+    <form method="get" class="card task-picker">
+      <label for="task-select"><strong>Task for Q8 and Q13</strong> <span class="faint small">(status history and recursive prerequisite chain)</span></label>
+      <div class="inline-form">
+        <select id="task-select" name="task" data-autosubmit>
+          {% for t in task_options %}
+          <option value="{{ t.pk }}"{% if t.pk == selected_task %} selected{% endif %}>{{ t.title }} · {{ t.project.name }}{% if t.prereq_count %} ({{ t.prereq_count }} direct prerequisite{{ t.prereq_count|pluralize }}){% endif %}</option>
+          {% empty %}
+          <option value="">No tasks yet</option>
+          {% endfor %}
+        </select>
+        <noscript><button class="btn btn-sm" type="submit">Run</button></noscript>
+      </div>
+    </form>
+
+    {% for r in results %}
+    <section class="card query-card" id="q{{ r.query.number }}">
+      <div class="card-head">
+        <div>
+          <h2><span class="q-num">Q{{ r.query.number }}</span> {{ r.query.title }}</h2>
+          {% if r.query.answers %}<div class="muted small" style="margin-top:2px">{{ r.query.answers }}</div>{% endif %}
+        </div>
+        <span class="faint small" style="white-space:nowrap">{{ r.rows|length }} row{{ r.rows|length|pluralize }}</span>
+      </div>
+      <div class="card-body query-body">
+        <div class="concepts">
+          {% for c in r.query.concepts %}<span class="concept">{{ c }}</span>{% endfor %}
+        </div>
+        {% if r.rows %}
+        <div class="table-wrap result-table">
+          <table class="table">
+            <thead><tr>{% for col in r.columns %}<th>{{ col }}</th>{% endfor %}</tr></thead>
+            <tbody>
+              {% for row in r.rows %}
+              <tr>{% for value in row %}<td>{{ value }}</td>{% endfor %}</tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="muted query-empty">The query ran and returned no rows for your data.</div>
+        {% endif %}
+        <details class="sql-block">
+          <summary>Show SQL</summary>
+          <pre><code>{{ r.query.sql }}</code></pre>
+        </details>
+      </div>
+    </section>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

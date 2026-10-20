@@ -19,6 +19,7 @@ urlpatterns = [
     path("tasks/<int:pk>/status/", views.task_status_update, name="task_status_update"),
     path("tasks/<int:pk>/dependencies/add/", views.dependency_add, name="dependency_add"),
     path("dependencies/<int:pk>/delete/", views.dependency_delete, name="dependency_delete"),
+    path("analytics/", views.analytics, name="analytics"),
     path("categories/", views.category_list, name="category_list"),
     path("categories/<int:pk>/delete/", views.category_delete, name="category_delete"),
     path("tags/", views.tag_list, name="tag_list"),

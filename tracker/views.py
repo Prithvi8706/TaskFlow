@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
+from .analytics import run_queries
 from .forms import (
     CategoryForm,
     MilestoneForm,
@@ -392,5 +393,32 @@ def tag_delete(request, pk):
             "kind": "tag",
             "warning": "It is removed from every task (its task_tag rows are deleted).",
             "cancel_url": reverse("tag_list"),
+        },
+    )
+
+
+# --------------------------------------------------------------- analytics
+
+
+@login_required
+def analytics(request):
+    task_options = list(
+        user_tasks(request.user)
+        .annotate(prereq_count=Count("prerequisite_links", distinct=True))
+        .order_by("-prereq_count", "title")
+    )
+    valid_ids = {t.pk for t in task_options}
+    requested = request.GET.get("task", "")
+    if requested.isdigit() and int(requested) in valid_ids:
+        selected = int(requested)
+    else:
+        selected = task_options[0].pk if task_options else None
+    return render(
+        request,
+        "tracker/analytics.html",
+        {
+            "results": run_queries(request.user, selected),
+            "task_options": task_options,
+            "selected_task": selected,
         },
     )
