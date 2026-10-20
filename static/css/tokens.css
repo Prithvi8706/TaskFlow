@@ -1,0 +1,122 @@
+/* TaskFlow design tokens. Every colour used in the UI is defined here. */
+
+:root {
+  /* Brand */
+  --accent: #1f6f50;
+  --accent-hover: #185a41;
+  --accent-soft: #e3f0ea;
+  --accent-contrast: #ffffff;
+
+  /* Surfaces */
+  --bg: #f3f4f6;
+  --surface: #ffffff;
+  --surface-muted: #f8f9fa;
+  --sidebar-bg: #ffffff;
+  --border: #e3e5e8;
+  --border-strong: #cfd3d8;
+
+  /* Text */
+  --text: #1c2024;
+  --text-muted: #5f6770;
+  --text-faint: #8a929b;
+
+  /* Status badges (restrained) */
+  --st-pending-bg: #eef0f2;
+  --st-pending-fg: #4a525a;
+  --st-progress-bg: #e5eefb;
+  --st-progress-fg: #24569b;
+  --st-blocked-bg: #fbeaea;
+  --st-blocked-fg: #a23a3a;
+  --st-completed-bg: #e3f0ea;
+  --st-completed-fg: #1f6f50;
+  --st-planned-bg: #f1edf9;
+  --st-planned-fg: #5b4a8f;
+  --st-hold-bg: #fbf2e1;
+  --st-hold-fg: #8a5a12;
+
+  /* Priority */
+  --pr-low: #8a929b;
+  --pr-medium: #c08a1e;
+  --pr-high: #c0453f;
+
+  /* Feedback */
+  --danger: #b83b3b;
+  --danger-hover: #9c3030;
+  --danger-soft: #fbeaea;
+  --success-soft: #e3f0ea;
+  --warning-soft: #fbf2e1;
+  --info-soft: #e5eefb;
+
+  /* Charts */
+  --chart-1: #1f6f50;
+  --chart-2: #4f8fd6;
+  --chart-3: #c08a1e;
+  --chart-4: #b5bcc4;
+
+  /* Shape, spacing, type */
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow: 0 1px 2px rgba(16, 24, 32, 0.05), 0 1px 3px rgba(16, 24, 32, 0.04);
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --sidebar-w: 236px;
+  --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --accent: #3fa57c;
+  --accent-hover: #52b78d;
+  --accent-soft: #1d3a2f;
+  --accent-contrast: #0e1512;
+
+  --bg: #121417;
+  --surface: #1b1e22;
+  --surface-muted: #202428;
+  --sidebar-bg: #171a1d;
+  --border: #2b3036;
+  --border-strong: #3a4047;
+
+  --text: #e6e8ea;
+  --text-muted: #a3abb3;
+  --text-faint: #7b848d;
+
+  --st-pending-bg: #2a2f35;
+  --st-pending-fg: #c3c9cf;
+  --st-progress-bg: #1e2f47;
+  --st-progress-fg: #8ab6ec;
+  --st-blocked-bg: #3d2224;
+  --st-blocked-fg: #ec9a9a;
+  --st-completed-bg: #1d3a2f;
+  --st-completed-fg: #7fd0ab;
+  --st-planned-bg: #2c2640;
+  --st-planned-fg: #bcaee8;
+  --st-hold-bg: #3a2f1a;
+  --st-hold-fg: #e3bd78;
+
+  --pr-low: #7b848d;
+  --pr-medium: #e0a93d;
+  --pr-high: #e47a74;
+
+  --danger: #d86060;
+  --danger-hover: #e27575;
+  --danger-soft: #3d2224;
+  --success-soft: #1d3a2f;
+  --warning-soft: #3a2f1a;
+  --info-soft: #1e2f47;
+
+  --chart-1: #3fa57c;
+  --chart-2: #6ea6e6;
+  --chart-3: #e0a93d;
+  --chart-4: #4a525a;
+
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+
+  color-scheme: dark;
+}
