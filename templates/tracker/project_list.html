@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Projects{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Projects</h1>
+    <p>{{ projects|length }} project{{ projects|length|pluralize }}</p>
+  </div>
+  <div class="page-actions"><a class="btn btn-primary" href="{% url 'project_create' %}">New project</a></div>
+</div>
+
+<div class="card">
+  {% if projects %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Project</th><th>Status</th><th>Start</th><th>Deadline</th><th>Progress</th><th></th></tr></thead>
+      <tbody>
+      {% for p in projects %}
+        <tr>
+          <td><strong>{{ p.name }}</strong>{% if p.description %}<div class="faint small">{{ p.description|truncatechars:70 }}</div>{% endif %}</td>
+          <td><span class="badge badge-{{ p.status }}">{{ p.get_status_display }}</span></td>
+          <td class="muted">{{ p.start_date|date:"M j, Y" }}</td>
+          <td class="muted">{{ p.deadline|date:"M j, Y" }}</td>
+          <td style="min-width:170px">
+            <div class="progress"><span style="width:{% widthratio p.completed_tasks p.total_tasks 100 %}%"></span></div>
+            <div class="faint small">{{ p.completed_tasks }} of {{ p.total_tasks }} tasks done</div>
+          </td>
+          <td class="row-actions">
+            <a class="btn btn-sm btn-ghost" href="{% url 'project_edit' p.pk %}">Edit</a>
+            <a class="btn btn-sm btn-ghost" href="{% url 'project_delete' p.pk %}">Delete</a>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="card-body muted">No projects yet.</div>
+  {% endif %}
+</div>
+{% endblock %}

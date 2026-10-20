@@ -273,3 +273,9 @@ table.table { width: 100%; border-collapse: collapse; }
 .auth-card .brand { padding: 0 0 var(--space-5); justify-content: center; }
 .auth-card form .field + .field { margin-top: var(--space-4); }
 .auth-foot { text-align: center; margin-top: var(--space-4); color: var(--text-muted); }
+
+/* ---------- Progress & table actions ---------- */
+
+.progress { height: 6px; border-radius: 999px; background: var(--surface-muted); border: 1px solid var(--border); overflow: hidden; margin-bottom: 4px; }
+.progress > span { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+.row-actions { text-align: right; white-space: nowrap; }
