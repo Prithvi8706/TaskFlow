@@ -126,6 +126,7 @@ class Task(models.Model):
     created_at = models.DateTimeField(default=timezone.now, db_default=Now())
     deadline = models.DateField(null=True, blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
+    tags = models.ManyToManyField("Tag", through="TaskTag", related_name="tasks", blank=True)
 
     class Meta:
         db_table = "task"
@@ -150,3 +151,36 @@ class Task(models.Model):
             and self.status != self.Status.COMPLETED
             and self.deadline < timezone.localdate()
         )
+
+
+class Tag(models.Model):
+    tag_id = models.BigAutoField(primary_key=True)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="tags")
+    name = models.CharField(max_length=40)
+
+    class Meta:
+        db_table = "tag"
+        ordering = ["name"]
+        constraints = [
+            models.UniqueConstraint(fields=["owner", "name"], name="uq_tag_owner_name"),
+        ]
+
+    def __str__(self):
+        return self.name
+
+
+class TaskTag(models.Model):
+    """Junction table resolving the task M:N tag relationship."""
+
+    task_tag_id = models.BigAutoField(primary_key=True)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE)
+    tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = "task_tag"
+        constraints = [
+            models.UniqueConstraint(fields=["task", "tag"], name="uq_task_tag"),
+        ]
+
+    def __str__(self):
+        return f"{self.task} #{self.tag}"
