@@ -9,11 +9,25 @@
   <div class="page-actions"><a class="btn btn-primary" href="{% url 'task_create' %}">New task</a></div>
 </div>
 
+<form method="get" class="card filter-bar">
+  <div class="filter-search">{{ filter_form.q }}</div>
+  {{ filter_form.status }}
+  {{ filter_form.priority }}
+  {{ filter_form.project }}
+  {{ filter_form.category }}
+  {{ filter_form.tag }}
+  {{ filter_form.sort }}
+  <div class="filter-actions">
+    <button class="btn btn-primary" type="submit">Apply</button>
+    {% if request.GET %}<a class="btn btn-ghost" href="{% url 'task_list' %}">Reset</a>{% endif %}
+  </div>
+</form>
+
 <div class="card">
   {% if tasks %}
     {% include "tracker/_task_table.html" with show_project=True %}
   {% else %}
-    <div class="card-body muted">No tasks yet.</div>
+    <div class="card-body muted">{% if is_filtered %}No tasks match these filters.{% else %}No tasks yet.{% endif %}</div>
   {% endif %}
 </div>
 {% endblock %}

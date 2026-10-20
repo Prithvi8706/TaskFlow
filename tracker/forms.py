@@ -181,3 +181,25 @@ class TaskDependencyForm(forms.Form):
 
     def save(self):
         return TaskDependency.objects.create(task=self.task, depends_on_task=self.cleaned_data["depends_on_task"])
+
+
+class TaskFilterForm(forms.Form):
+    SORT_CHOICES = [
+        ("deadline", "Deadline (soonest first)"),
+        ("priority", "Priority (highest first)"),
+        ("created", "Created (newest first)"),
+    ]
+
+    q = forms.CharField(required=False, widget=forms.TextInput(attrs={"type": "search", "placeholder": "Search title or description"}))
+    status = forms.ChoiceField(required=False, choices=[("", "Any status")] + Task.Status.choices)
+    priority = forms.ChoiceField(required=False, choices=[("", "Any priority")] + Task.Priority.choices)
+    project = forms.ModelChoiceField(required=False, queryset=Project.objects.none(), empty_label="Any project")
+    category = forms.ModelChoiceField(required=False, queryset=Category.objects.none(), empty_label="Any category")
+    tag = forms.ModelChoiceField(required=False, queryset=Tag.objects.none(), empty_label="Any tag")
+    sort = forms.ChoiceField(required=False, choices=SORT_CHOICES)
+
+    def __init__(self, *args, user, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["project"].queryset = Project.objects.filter(owner=user)
+        self.fields["category"].queryset = Category.objects.filter(owner=user)
+        self.fields["tag"].queryset = Tag.objects.filter(owner=user)

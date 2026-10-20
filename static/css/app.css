@@ -294,3 +294,20 @@ table.table { width: 100%; border-collapse: collapse; }
 .inline-form { display: flex; gap: var(--space-2); align-items: center; }
 .inline-form select { flex: 1; }
 .card-body > .errorlist { list-style: none; padding: 0; margin: 8px 0 0; color: var(--danger); font-size: 12.5px; }
+
+/* ---------- Filter bar ---------- */
+
+.filter-bar {
+  display: grid;
+  grid-template-columns: minmax(200px, 2fr) repeat(6, minmax(120px, 1fr)) auto;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  margin-bottom: var(--space-5);
+  align-items: center;
+}
+.filter-actions { display: flex; gap: var(--space-2); }
+@media (max-width: 1200px) {
+  .filter-bar { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .filter-search { grid-column: 1 / -1; }
+}
+.filter-bar + .card { margin-top: 0; }

@@ -1,10 +1,18 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db.models import Count, Q
+from django.db.models import Case, Count, F, IntegerField, Q, Value, When
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
-from .forms import CategoryForm, MilestoneForm, ProjectForm, TagForm, TaskDependencyForm, TaskForm
+from .forms import (
+    CategoryForm,
+    MilestoneForm,
+    ProjectForm,
+    TagForm,
+    TaskDependencyForm,
+    TaskFilterForm,
+    TaskForm,
+)
 from .models import Category, Milestone, Project, Tag, Task, TaskDependency
 
 
@@ -156,10 +164,50 @@ def user_tasks(user):
     )
 
 
+PRIORITY_RANK = Case(
+    When(priority=Task.Priority.HIGH, then=Value(3)),
+    When(priority=Task.Priority.MEDIUM, then=Value(2)),
+    default=Value(1),
+    output_field=IntegerField(),
+)
+
+SORT_ORDER = {
+    "deadline": [F("deadline").asc(nulls_last=True), "title"],
+    "priority": [PRIORITY_RANK.desc(), F("deadline").asc(nulls_last=True), "title"],
+    "created": ["-created_at", "title"],
+}
+
+
+def filtered_tasks(request):
+    """Apply the search / filter / sort query string to the user's tasks."""
+    form = TaskFilterForm(request.GET or None, user=request.user)
+    tasks = user_tasks(request.user)
+    sort = "deadline"
+    if form.is_valid():
+        data = form.cleaned_data
+        if data["q"]:
+            tasks = tasks.filter(Q(title__icontains=data["q"]) | Q(description__icontains=data["q"]))
+        if data["status"]:
+            tasks = tasks.filter(status=data["status"])
+        if data["priority"]:
+            tasks = tasks.filter(priority=data["priority"])
+        if data["project"]:
+            tasks = tasks.filter(project=data["project"])
+        if data["category"]:
+            tasks = tasks.filter(category=data["category"])
+        if data["tag"]:
+            tasks = tasks.filter(tags=data["tag"])
+        sort = data["sort"] or sort
+    return form, tasks.order_by(*SORT_ORDER[sort])
+
+
 @login_required
 def task_list(request):
-    tasks = user_tasks(request.user).order_by("deadline", "title")
-    return render(request, "tracker/task_list.html", {"tasks": tasks})
+    form, tasks = filtered_tasks(request)
+    is_filtered = any(v for k, v in request.GET.items() if k != "sort")
+    return render(
+        request, "tracker/task_list.html", {"tasks": tasks, "filter_form": form, "is_filtered": is_filtered}
+    )
 
 
 @login_required
