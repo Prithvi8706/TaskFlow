@@ -22,8 +22,8 @@
           <td class="muted">{{ p.start_date|date:"M j, Y" }}</td>
           <td class="muted">{{ p.deadline|date:"M j, Y" }}</td>
           <td style="min-width:170px">
-            <div class="progress"><span style="width:{% widthratio p.completed_tasks p.total_tasks 100 %}%"></span></div>
-            <div class="faint small">{{ p.completed_tasks }} of {{ p.total_tasks }} tasks done</div>
+            <div class="progress"><span style="width:{{ p.progress.completion_pct|stringformat:'s' }}%"></span></div>
+            <div class="faint small">{{ p.progress.completion_pct }}% · {{ p.progress.completed_tasks }} of {{ p.progress.total_tasks }} tasks{% if p.progress.overdue_tasks %} · <span class="overdue">{{ p.progress.overdue_tasks }} overdue</span>{% endif %}</div>
           </td>
           <td class="row-actions">
             <a class="btn btn-sm btn-ghost" href="{% url 'project_edit' p.pk %}">Edit</a>

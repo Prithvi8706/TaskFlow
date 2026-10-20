@@ -240,3 +240,46 @@ class TaskHistory(models.Model):
 
     def __str__(self):
         return f"{self.task}: {self.old_status} -> {self.new_status}"
+
+
+# ---------------------------------------------------------------------------
+# Read-only models over the PostgreSQL views in sql/views.sql.
+# managed = False: Django never creates, alters or drops these.
+# ---------------------------------------------------------------------------
+
+
+class ProjectProgress(models.Model):
+    project = models.OneToOneField(
+        Project, on_delete=models.DO_NOTHING, primary_key=True, db_column="project_id", related_name="progress"
+    )
+    owner = models.ForeignKey(User, on_delete=models.DO_NOTHING, db_column="owner_id", related_name="+")
+    name = models.CharField(max_length=120)
+    total_tasks = models.IntegerField()
+    completed_tasks = models.IntegerField()
+    overdue_tasks = models.IntegerField()
+    completion_pct = models.DecimalField(max_digits=5, decimal_places=1)
+
+    class Meta:
+        managed = False
+        db_table = "v_project_progress"
+
+    def __str__(self):
+        return f"{self.name}: {self.completion_pct}%"
+
+
+class MilestoneProgress(models.Model):
+    milestone = models.OneToOneField(
+        Milestone, on_delete=models.DO_NOTHING, primary_key=True, db_column="milestone_id", related_name="progress"
+    )
+    project = models.ForeignKey(Project, on_delete=models.DO_NOTHING, db_column="project_id", related_name="+")
+    name = models.CharField(max_length=120)
+    total_tasks = models.IntegerField()
+    completed_tasks = models.IntegerField()
+    completion_pct = models.DecimalField(max_digits=5, decimal_places=1)
+
+    class Meta:
+        managed = False
+        db_table = "v_milestone_progress"
+
+    def __str__(self):
+        return f"{self.name}: {self.completion_pct}%"

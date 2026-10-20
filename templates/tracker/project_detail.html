@@ -16,8 +16,9 @@
 <div class="grid grid-3" style="margin-bottom:24px">
   <div class="card card-body">
     <div class="muted small">Progress</div>
-    <div class="progress" style="margin:8px 0 6px"><span style="width:{% widthratio counts.completed counts.total 100 %}%"></span></div>
-    <div><strong>{% widthratio counts.completed counts.total 100 %}%</strong> <span class="muted small">· {{ counts.completed }} of {{ counts.total }} tasks</span></div>
+    <div class="progress" style="margin:8px 0 6px"><span style="width:{{ progress.completion_pct|stringformat:'s' }}%"></span></div>
+    <div><strong>{{ progress.completion_pct }}%</strong> <span class="muted small">· {{ progress.completed_tasks }} of {{ progress.total_tasks }} tasks{% if progress.overdue_tasks %} · <span class="overdue">{{ progress.overdue_tasks }} overdue</span>{% endif %}</span></div>
+    <div class="faint small" style="margin-top:4px">from view <code>v_project_progress</code></div>
   </div>
   <div class="card card-body">
     <div class="muted small">Milestones</div>
@@ -41,8 +42,8 @@
         <td><span class="badge badge-{{ m.status }}">{{ m.get_status_display }}</span></td>
         <td class="muted">{{ m.deadline|date:"M j, Y"|default:"—" }}</td>
         <td style="min-width:160px">
-          <div class="progress"><span style="width:{% widthratio m.completed_tasks m.total_tasks 100 %}%"></span></div>
-          <div class="faint small">{{ m.completed_tasks }} of {{ m.total_tasks }} tasks</div>
+          <div class="progress"><span style="width:{{ m.progress.completion_pct|stringformat:'s' }}%"></span></div>
+          <div class="faint small">{{ m.progress.completion_pct }}% · {{ m.progress.completed_tasks }} of {{ m.progress.total_tasks }} tasks</div>
         </td>
         <td class="row-actions">
           <a class="btn btn-sm btn-ghost" href="{% url 'milestone_edit' m.pk %}">Edit</a>

@@ -15,7 +15,7 @@ from .forms import (
     TaskFilterForm,
     TaskForm,
 )
-from .models import Category, Milestone, Project, Tag, Task, TaskDependency
+from .models import Category, Milestone, MilestoneProgress, Project, ProjectProgress, Tag, Task, TaskDependency
 
 
 # ---------------------------------------------------------------- projects
@@ -23,14 +23,8 @@ from .models import Category, Milestone, Project, Tag, Task, TaskDependency
 
 @login_required
 def project_list(request):
-    projects = (
-        Project.objects.filter(owner=request.user)
-        .annotate(
-            total_tasks=Count("tasks"),
-            completed_tasks=Count("tasks", filter=Q(tasks__status=Task.Status.COMPLETED)),
-        )
-        .order_by("deadline", "name")
-    )
+    # Progress numbers come from the v_project_progress view (OneToOne `progress`).
+    projects = Project.objects.filter(owner=request.user).select_related("progress").order_by("deadline", "name")
     return render(request, "tracker/project_list.html", {"projects": projects})
 
 
@@ -43,14 +37,8 @@ def project_detail(request, pk):
         .annotate(open_prereqs=OPEN_PREREQS)
         .order_by("deadline", "title")
     )
-    milestones = project.milestones.annotate(
-        total_tasks=Count("tasks"),
-        completed_tasks=Count("tasks", filter=Q(tasks__status=Task.Status.COMPLETED)),
-    )
-    counts = tasks.aggregate(
-        total=Count("task_id"),
-        completed=Count("task_id", filter=Q(status=Task.Status.COMPLETED)),
-    )
+    milestones = project.milestones.select_related("progress")
+    progress = ProjectProgress.objects.get(project=project)
     return render(
         request,
         "tracker/project_detail.html",
@@ -58,7 +46,7 @@ def project_detail(request, pk):
             "project": project,
             "tasks": tasks,
             "milestones": milestones,
-            "counts": counts,
+            "progress": progress,
             "status_choices": Task.Status.choices,
         },
     )
