@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}{{ project.name }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <div class="faint small"><a href="{% url 'project_list' %}">Projects</a> /</div>
+    <h1>{{ project.name }} <span class="badge badge-{{ project.status }}" style="vertical-align:middle">{{ project.get_status_display }}</span></h1>
+    <p>{{ project.start_date|date:"M j, Y" }} → {{ project.deadline|date:"M j, Y" }}</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn" href="{% url 'project_edit' project.pk %}">Edit</a>
+    <a class="btn" href="{% url 'project_delete' project.pk %}">Delete</a>
+  </div>
+</div>
+
+<div class="grid grid-3" style="margin-bottom:24px">
+  <div class="card card-body">
+    <div class="muted small">Progress</div>
+    <div class="progress" style="margin:8px 0 6px"><span style="width:{% widthratio counts.completed counts.total 100 %}%"></span></div>
+    <div><strong>{% widthratio counts.completed counts.total 100 %}%</strong> <span class="muted small">· {{ counts.completed }} of {{ counts.total }} tasks</span></div>
+  </div>
+  <div class="card card-body">
+    <div class="muted small">Milestones</div>
+    <div class="stat">{{ milestones|length }}</div>
+  </div>
+  <div class="card card-body">
+    <div class="muted small">Description</div>
+    <div style="margin-top:6px">{{ project.description|default:"—"|linebreaksbr }}</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head"><h2>Milestones</h2></div>
+  {% if milestones %}
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Milestone</th><th>Status</th><th>Deadline</th><th>Progress</th></tr></thead>
+    <tbody>
+    {% for m in milestones %}
+      <tr>
+        <td><strong>{{ m.name }}</strong>{% if m.description %}<div class="faint small">{{ m.description|truncatechars:80 }}</div>{% endif %}</td>
+        <td><span class="badge badge-{{ m.status }}">{{ m.get_status_display }}</span></td>
+        <td class="muted">{{ m.deadline|date:"M j, Y"|default:"—" }}</td>
+        <td style="min-width:160px">
+          <div class="progress"><span style="width:{% widthratio m.completed_tasks m.total_tasks 100 %}%"></span></div>
+          <div class="faint small">{{ m.completed_tasks }} of {{ m.total_tasks }} tasks</div>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}
+  <div class="card-body muted">No milestones in this project yet.</div>
+  {% endif %}
+</div>
+
+<div class="card">
+  <div class="card-head"><h2>Tasks</h2></div>
+  {% if tasks %}
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Task</th><th>Status</th><th>Priority</th><th>Milestone</th><th>Deadline</th></tr></thead>
+    <tbody>
+    {% for t in tasks %}
+      <tr>
+        <td><strong>{{ t.title }}</strong>{% if t.category %}<div class="faint small">{{ t.category }}</div>{% endif %}</td>
+        <td><span class="badge badge-{{ t.status }}">{{ t.get_status_display }}</span></td>
+        <td><span class="priority priority-{{ t.priority }}">{{ t.get_priority_display }}</span></td>
+        <td class="muted">{{ t.milestone|default:"—" }}</td>
+        <td class="{% if t.is_overdue %}overdue{% else %}muted{% endif %}">{{ t.deadline|date:"M j, Y"|default:"—" }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}
+  <div class="card-body muted">No tasks in this project yet.</div>
+  {% endif %}
+</div>
+{% endblock %}

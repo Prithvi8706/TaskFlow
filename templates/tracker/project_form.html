@@ -20,7 +20,7 @@
       {% include "partials/field.html" with field=form.deadline %}
     </div>
     <div class="form-actions">
-      <a class="btn" href="{% url 'project_list' %}">Cancel</a>
+      <a class="btn" href="{% if project %}{% url 'project_detail' project.pk %}{% else %}{% url 'project_list' %}{% endif %}">Cancel</a>
       <button class="btn btn-primary" type="submit">{% if project %}Save changes{% else %}Create project{% endif %}</button>
     </div>
   </form>

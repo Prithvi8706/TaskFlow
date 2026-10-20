@@ -25,12 +25,31 @@ def project_list(request):
 
 
 @login_required
+def project_detail(request, pk):
+    project = get_object_or_404(Project, pk=pk, owner=request.user)
+    tasks = project.tasks.select_related("milestone", "category").order_by("deadline", "title")
+    milestones = project.milestones.annotate(
+        total_tasks=Count("tasks"),
+        completed_tasks=Count("tasks", filter=Q(tasks__status=Task.Status.COMPLETED)),
+    )
+    counts = tasks.aggregate(
+        total=Count("task_id"),
+        completed=Count("task_id", filter=Q(status=Task.Status.COMPLETED)),
+    )
+    return render(
+        request,
+        "tracker/project_detail.html",
+        {"project": project, "tasks": tasks, "milestones": milestones, "counts": counts},
+    )
+
+
+@login_required
 def project_create(request):
     form = ProjectForm(request.POST or None, owner=request.user)
     if request.method == "POST" and form.is_valid():
         project = form.save()
         messages.success(request, f"Project “{project.name}” created.")
-        return redirect("project_list")
+        return redirect("project_detail", pk=project.pk)
     return render(request, "tracker/project_form.html", {"form": form})
 
 
@@ -41,7 +60,7 @@ def project_edit(request, pk):
     if request.method == "POST" and form.is_valid():
         form.save()
         messages.success(request, "Project updated.")
-        return redirect("project_list")
+        return redirect("project_detail", pk=project.pk)
     return render(request, "tracker/project_form.html", {"form": form, "project": project})
 
 

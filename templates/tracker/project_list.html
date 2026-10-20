@@ -17,7 +17,7 @@
       <tbody>
       {% for p in projects %}
         <tr>
-          <td><strong>{{ p.name }}</strong>{% if p.description %}<div class="faint small">{{ p.description|truncatechars:70 }}</div>{% endif %}</td>
+          <td><a href="{% url 'project_detail' p.pk %}"><strong>{{ p.name }}</strong></a>{% if p.description %}<div class="faint small">{{ p.description|truncatechars:70 }}</div>{% endif %}</td>
           <td><span class="badge badge-{{ p.status }}">{{ p.get_status_display }}</span></td>
           <td class="muted">{{ p.start_date|date:"M j, Y" }}</td>
           <td class="muted">{{ p.deadline|date:"M j, Y" }}</td>
