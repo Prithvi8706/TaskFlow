@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Category, Milestone, Project, Tag, Task
+from .models import Category, Milestone, Project, Tag, Task, TaskDependency
 
 
 class DateInput(forms.DateInput):
@@ -114,6 +114,11 @@ class TaskForm(forms.ModelForm):
             self.add_error("milestone", "This milestone belongs to a different project.")
         if project and deadline and deadline < project.start_date:
             self.add_error("deadline", f"Deadline is before the project starts ({project.start_date:%b %d, %Y}).")
+        if cleaned.get("status") == Task.Status.COMPLETED and self.instance.pk:
+            open_prereqs = self.instance.open_prerequisites()
+            if open_prereqs:
+                names = ", ".join(t.title for t in open_prereqs)
+                self.add_error("status", f"Finish its prerequisites first: {names}.")
         return cleaned
 
 
@@ -122,3 +127,57 @@ class TagForm(OwnedNameMixin, forms.ModelForm):
         model = Tag
         fields = ["name"]
         widgets = {"name": forms.TextInput(attrs={"placeholder": "e.g. urgent"})}
+
+
+def find_dependency_path(start_id, target_id, edges):
+    """
+    Depth-first search over prerequisite edges (task_id -> [depends_on_task_id]).
+    Returns the list of task ids from start to target if target is reachable,
+    otherwise None.
+    """
+    stack = [(start_id, [start_id])]
+    seen = set()
+    while stack:
+        node, path = stack.pop()
+        if node == target_id:
+            return path
+        if node in seen:
+            continue
+        seen.add(node)
+        for nxt in edges.get(node, ()):
+            stack.append((nxt, path + [nxt]))
+    return None
+
+
+class TaskDependencyForm(forms.Form):
+    depends_on_task = forms.ModelChoiceField(queryset=Task.objects.none(), label="Prerequisite task")
+
+    def __init__(self, *args, task, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.task = task
+        # The task itself stays selectable on purpose: picking it shows the
+        # self-dependency rejection instead of silently hiding the option.
+        self.fields["depends_on_task"].queryset = Task.objects.filter(project=task.project).order_by("title")
+
+    def clean_depends_on_task(self):
+        prereq = self.cleaned_data["depends_on_task"]
+        if prereq.pk == self.task.pk:
+            raise forms.ValidationError("A task cannot depend on itself.")
+        if TaskDependency.objects.filter(task=self.task, depends_on_task=prereq).exists():
+            raise forms.ValidationError("This prerequisite is already linked.")
+
+        # Adding task -> prereq creates a cycle if task is already reachable from prereq.
+        edges = {}
+        for t_id, d_id in TaskDependency.objects.filter(task__project=self.task.project).values_list(
+            "task_id", "depends_on_task_id"
+        ):
+            edges.setdefault(t_id, []).append(d_id)
+        path = find_dependency_path(prereq.pk, self.task.pk, edges)
+        if path:
+            titles = dict(Task.objects.filter(pk__in=path).values_list("pk", "title"))
+            chain = " → ".join(titles[i] for i in [self.task.pk] + path)
+            raise forms.ValidationError(f"That would create a cycle: {chain}.")
+        return prereq
+
+    def save(self):
+        return TaskDependency.objects.create(task=self.task, depends_on_task=self.cleaned_data["depends_on_task"])

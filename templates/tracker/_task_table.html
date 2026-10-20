@@ -5,6 +5,7 @@
     <tr>
       <td>
         <a href="{% url 'task_detail' t.pk %}"><strong>{{ t.title }}</strong></a>
+        {% if t.open_prereqs and t.status != "COMPLETED" %}<span class="blocked-pill" title="{{ t.open_prereqs }} prerequisite{{ t.open_prereqs|pluralize }} not completed">waiting on {{ t.open_prereqs }}</span>{% endif %}
         <div class="task-meta">
           {% if t.category %}<span class="faint small">{{ t.category }}</span>{% endif %}
           {% for tag in t.tags.all %}<span class="tag-chip">#{{ tag.name }}</span>{% endfor %}

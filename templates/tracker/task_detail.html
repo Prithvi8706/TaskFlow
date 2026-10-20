@@ -16,6 +16,12 @@
   </div>
 </div>
 
+{% if task.open_prereqs and task.status != "COMPLETED" %}
+<div class="notice notice-warning">
+  Blocked: {{ task.open_prereqs }} prerequisite{{ task.open_prereqs|pluralize }} still open. It cannot be marked completed until they are done.
+</div>
+{% endif %}
+
 <div class="grid grid-2">
   <div class="card">
     <div class="card-head"><h2>Details</h2></div>
@@ -34,6 +40,50 @@
   <div class="card">
     <div class="card-head"><h2>Description</h2></div>
     <div class="card-body">{{ task.description|default:"No description."|linebreaksbr }}</div>
+  </div>
+</div>
+
+<div class="grid grid-2" style="margin-top:24px">
+  <div class="card">
+    <div class="card-head"><h2>Prerequisites</h2><span class="faint small">must be completed first</span></div>
+    {% if prerequisites %}
+    <table class="table"><tbody>
+      {% for d in prerequisites %}
+      <tr>
+        <td><a href="{% url 'task_detail' d.depends_on_task_id %}">{{ d.depends_on_task.title }}</a></td>
+        <td><span class="badge badge-{{ d.depends_on_task.status }}">{{ d.depends_on_task.get_status_display }}</span></td>
+        <td class="row-actions">
+          <form method="post" action="{% url 'dependency_delete' d.pk %}">{% csrf_token %}<button class="btn btn-sm btn-ghost" type="submit">Remove</button></form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody></table>
+    {% else %}
+    <div class="card-body muted">No prerequisites.</div>
+    {% endif %}
+    <div class="card-body" style="border-top:1px solid var(--border)">
+      <form method="post" action="{% url 'dependency_add' task.pk %}" class="inline-form">
+        {% csrf_token %}
+        {{ dep_form.depends_on_task }}
+        <button class="btn btn-sm" type="submit">Add prerequisite</button>
+      </form>
+      {{ dep_form.depends_on_task.errors }}
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head"><h2>Blocks</h2><span class="faint small">tasks waiting on this one</span></div>
+    {% if dependents %}
+    <table class="table"><tbody>
+      {% for d in dependents %}
+      <tr>
+        <td><a href="{% url 'task_detail' d.task_id %}">{{ d.task.title }}</a></td>
+        <td><span class="badge badge-{{ d.task.status }}">{{ d.task.get_status_display }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody></table>
+    {% else %}
+    <div class="card-body muted">No tasks depend on this one.</div>
+    {% endif %}
   </div>
 </div>
 {% endblock %}

@@ -4,8 +4,8 @@ from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
-from .forms import CategoryForm, MilestoneForm, ProjectForm, TagForm, TaskForm
-from .models import Category, Milestone, Project, Tag, Task
+from .forms import CategoryForm, MilestoneForm, ProjectForm, TagForm, TaskDependencyForm, TaskForm
+from .models import Category, Milestone, Project, Tag, Task, TaskDependency
 
 
 # ---------------------------------------------------------------- projects
@@ -27,7 +27,12 @@ def project_list(request):
 @login_required
 def project_detail(request, pk):
     project = get_object_or_404(Project, pk=pk, owner=request.user)
-    tasks = project.tasks.select_related("milestone", "category").prefetch_related("tags").order_by("deadline", "title")
+    tasks = (
+        project.tasks.select_related("milestone", "category")
+        .prefetch_related("tags")
+        .annotate(open_prereqs=OPEN_PREREQS)
+        .order_by("deadline", "title")
+    )
     milestones = project.milestones.annotate(
         total_tasks=Count("tasks"),
         completed_tasks=Count("tasks", filter=Q(tasks__status=Task.Status.COMPLETED)),
@@ -135,11 +140,19 @@ def milestone_delete(request, pk):
 # ------------------------------------------------------------------- tasks
 
 
+# Number of prerequisites that are not completed; > 0 means the task is blocked.
+OPEN_PREREQS = Count(
+    "prerequisite_links",
+    filter=~Q(prerequisite_links__depends_on_task__status=Task.Status.COMPLETED),
+)
+
+
 def user_tasks(user):
     return (
         Task.objects.filter(project__owner=user)
         .select_related("project", "milestone", "category")
         .prefetch_related("tags")
+        .annotate(open_prereqs=OPEN_PREREQS)
     )
 
 
@@ -152,7 +165,45 @@ def task_list(request):
 @login_required
 def task_detail(request, pk):
     task = get_object_or_404(user_tasks(request.user), pk=pk)
-    return render(request, "tracker/task_detail.html", {"task": task})
+    return render_task_detail(request, task, TaskDependencyForm(task=task))
+
+
+def render_task_detail(request, task, dep_form):
+    prerequisites = task.prerequisite_links.select_related("depends_on_task").order_by("depends_on_task__title")
+    dependents = task.dependent_links.select_related("task").order_by("task__title")
+    return render(
+        request,
+        "tracker/task_detail.html",
+        {
+            "task": task,
+            "prerequisites": prerequisites,
+            "dependents": dependents,
+            "dep_form": dep_form,
+        },
+    )
+
+
+@login_required
+def dependency_add(request, pk):
+    task = get_object_or_404(user_tasks(request.user), pk=pk)
+    if request.method != "POST":
+        return redirect("task_detail", pk=task.pk)
+    form = TaskDependencyForm(request.POST, task=task)
+    if not form.is_valid():
+        # Re-render so the rejection (self-dependency, duplicate, cycle) shows on the form.
+        return render_task_detail(request, task, form)
+    dep = form.save()
+    messages.success(request, f"“{task.title}” now depends on “{dep.depends_on_task.title}”.")
+    return redirect("task_detail", pk=task.pk)
+
+
+@login_required
+def dependency_delete(request, pk):
+    dep = get_object_or_404(TaskDependency, pk=pk, task__project__owner=request.user)
+    if request.method == "POST":
+        dep.delete()
+        messages.success(request, "Prerequisite removed.")
+    return redirect("task_detail", pk=dep.task_id)
 
 
 @login_required

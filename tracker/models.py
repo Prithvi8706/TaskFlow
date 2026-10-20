@@ -144,6 +144,12 @@ class Task(models.Model):
     def __str__(self):
         return self.title
 
+    def open_prerequisites(self):
+        """Prerequisite tasks that are not completed yet."""
+        return list(
+            Task.objects.filter(dependent_links__task=self).exclude(status=Task.Status.COMPLETED).order_by("title")
+        )
+
     @property
     def is_overdue(self):
         return (

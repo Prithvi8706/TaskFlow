@@ -285,3 +285,12 @@ table.table { width: 100%; border-collapse: collapse; }
 .details dt { color: var(--text-muted); }
 .details dd { margin: 0; }
 .task-meta { display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; margin-top: 2px; }
+.blocked-pill {
+  display: inline-block; margin-left: 6px; padding: 0 7px; border-radius: 999px;
+  font-size: 11.5px; font-weight: 500; background: var(--st-blocked-bg); color: var(--st-blocked-fg);
+}
+.notice { border-radius: var(--radius-sm); padding: var(--space-3) var(--space-4); margin-bottom: var(--space-5); }
+.notice-warning { background: var(--warning-soft); color: var(--st-hold-fg); }
+.inline-form { display: flex; gap: var(--space-2); align-items: center; }
+.inline-form select { flex: 1; }
+.card-body > .errorlist { list-style: none; padding: 0; margin: 8px 0 0; color: var(--danger); font-size: 12.5px; }
