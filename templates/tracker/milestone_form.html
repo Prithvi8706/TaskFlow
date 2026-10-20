@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{% if milestone %}Edit milestone{% else %}New milestone{% endif %}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <div class="faint small"><a href="{% url 'project_list' %}">Projects</a> / <a href="{% url 'project_detail' project.pk %}">{{ project.name }}</a> /</div>
+    <h1>{% if milestone %}Edit “{{ milestone.name }}”{% else %}New milestone{% endif %}</h1>
+  </div>
+</div>
+<div class="card" style="max-width:760px"><div class="card-body">
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "partials/form_errors.html" %}
+    <div class="form-grid">
+      {% include "partials/field.html" with field=form.name full=True %}
+      {% include "partials/field.html" with field=form.description full=True %}
+      {% include "partials/field.html" with field=form.status %}
+      {% include "partials/field.html" with field=form.deadline %}
+    </div>
+    <div class="form-actions">
+      <a class="btn" href="{% url 'project_detail' project.pk %}">Cancel</a>
+      <button class="btn btn-primary" type="submit">{% if milestone %}Save changes{% else %}Add milestone{% endif %}</button>
+    </div>
+  </form>
+</div></div>
+{% endblock %}

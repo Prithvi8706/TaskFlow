@@ -30,10 +30,10 @@
 </div>
 
 <div class="card">
-  <div class="card-head"><h2>Milestones</h2></div>
+  <div class="card-head"><h2>Milestones</h2><a class="btn btn-sm" href="{% url 'milestone_create' project.pk %}">Add milestone</a></div>
   {% if milestones %}
   <div class="table-wrap"><table class="table">
-    <thead><tr><th>Milestone</th><th>Status</th><th>Deadline</th><th>Progress</th></tr></thead>
+    <thead><tr><th>Milestone</th><th>Status</th><th>Deadline</th><th>Progress</th><th></th></tr></thead>
     <tbody>
     {% for m in milestones %}
       <tr>
@@ -43,6 +43,10 @@
         <td style="min-width:160px">
           <div class="progress"><span style="width:{% widthratio m.completed_tasks m.total_tasks 100 %}%"></span></div>
           <div class="faint small">{{ m.completed_tasks }} of {{ m.total_tasks }} tasks</div>
+        </td>
+        <td class="row-actions">
+          <a class="btn btn-sm btn-ghost" href="{% url 'milestone_edit' m.pk %}">Edit</a>
+          <a class="btn btn-sm btn-ghost" href="{% url 'milestone_delete' m.pk %}">Delete</a>
         </td>
       </tr>
     {% endfor %}

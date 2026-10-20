@@ -4,8 +4,8 @@ from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
-from .forms import ProjectForm
-from .models import Project, Task
+from .forms import MilestoneForm, ProjectForm
+from .models import Milestone, Project, Task
 
 
 # ---------------------------------------------------------------- projects
@@ -80,5 +80,53 @@ def project_delete(request, pk):
             "kind": "project",
             "warning": "All of its milestones, tasks and task history will be deleted too.",
             "cancel_url": reverse("project_list"),
+        },
+    )
+
+
+# -------------------------------------------------------------- milestones
+
+
+@login_required
+def milestone_create(request, project_pk):
+    project = get_object_or_404(Project, pk=project_pk, owner=request.user)
+    form = MilestoneForm(request.POST or None, project=project)
+    if request.method == "POST" and form.is_valid():
+        milestone = form.save()
+        messages.success(request, f"Milestone “{milestone.name}” added.")
+        return redirect("project_detail", pk=project.pk)
+    return render(request, "tracker/milestone_form.html", {"form": form, "project": project})
+
+
+@login_required
+def milestone_edit(request, pk):
+    milestone = get_object_or_404(Milestone, pk=pk, project__owner=request.user)
+    project = milestone.project
+    form = MilestoneForm(request.POST or None, instance=milestone, project=project)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Milestone updated.")
+        return redirect("project_detail", pk=project.pk)
+    return render(
+        request, "tracker/milestone_form.html", {"form": form, "project": project, "milestone": milestone}
+    )
+
+
+@login_required
+def milestone_delete(request, pk):
+    milestone = get_object_or_404(Milestone, pk=pk, project__owner=request.user)
+    project = milestone.project
+    if request.method == "POST":
+        milestone.delete()
+        messages.success(request, f"Milestone “{milestone.name}” deleted.")
+        return redirect("project_detail", pk=project.pk)
+    return render(
+        request,
+        "tracker/confirm_delete.html",
+        {
+            "object": milestone,
+            "kind": "milestone",
+            "warning": "Its tasks stay in the project but are no longer linked to a milestone.",
+            "cancel_url": reverse("project_detail", args=[project.pk]),
         },
     )
