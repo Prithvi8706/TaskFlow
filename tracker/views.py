@@ -271,6 +271,10 @@ def filtered_tasks(request):
         if data["tag"]:
             tasks = tasks.filter(tags=data["tag"])
         sort = data["sort"] or sort
+    elif form.is_bound:
+        # A value outside the allowed choices (or another user's id) is an error,
+        # not "no filter": show the error and an empty list rather than everything.
+        return form, tasks.none()
     return form, tasks.order_by(*SORT_ORDER[sort])
 
 

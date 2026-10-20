@@ -26,6 +26,12 @@
   </div>
 </form>
 
+{% if filter_form.errors %}
+<div class="form-errors filter-errors" role="alert">
+  <ul>{% for field in filter_form %}{% for error in field.errors %}<li>{{ field.label }}: {{ error }}</li>{% endfor %}{% endfor %}</ul>
+</div>
+{% endif %}
+
 <div class="card">
   {% if tasks %}
     {% include "tracker/_task_table.html" with show_project=True %}

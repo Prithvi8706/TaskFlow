@@ -86,23 +86,25 @@ relative to today. Re-running it wipes and reloads the demo users only.
 .venv/Scripts/python manage.py test
 ```
 
-The 38 tests run against a real PostgreSQL test database built by the same
+The 47 tests run against a real PostgreSQL test database built by the same
 migrations. They cover: invalid priority, status and deadline rejected by
 CHECK constraints; a bad foreign key rejected; self-dependency and duplicate
 dependency rejected; cascade and set-null deletes issued in raw SQL; a history
 row per status change, and none for a no-op update; `completed_at` set, kept
 and cleared; rollback leaving no rows; view numbers matching a manual count;
 cycle detection; per-user scoping; atomic project creation; all 13 analytics
-queries; CSV export; and seed reproducibility.
+queries; CSV export; rejection of invalid filter values; cycles across
+projects; database-level cascade on user delete; and seed reproducibility and
+timeline.
 
 Last run:
 
 ```
-Found 38 test(s).
+Found 47 test(s).
 System check identified no issues (0 silenced).
-......................................
+...............................................
 ----------------------------------------------------------------------
-Ran 38 tests in 18.803s
+Ran 47 tests in 23.576s
 
 OK
 ```

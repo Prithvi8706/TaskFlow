@@ -217,3 +217,35 @@ class SeedTimelineTests(TestCase):
         # Steps are no longer all stamped at seed time.
         distinct_days = {h.changed_at.date() for h in TaskHistory.objects.all()}
         self.assertGreater(len(distinct_days), 20)
+
+
+class InvalidFilterTests(TestCase):
+    """Health-check issue 4: a bad filter value must not silently show everything."""
+
+    def setUp(self):
+        self.user = make_user()
+        project = make_project(self.user)
+        make_task(project, "Visible")
+        self.foreign = make_project(make_user("bob"), name="Bob's project")
+        self.client.force_login(self.user)
+
+    def test_unknown_status_shows_an_error_and_no_tasks(self):
+        response = self.client.get("/tasks/?status=BOGUS")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.context["tasks"]), [])
+        self.assertContains(response, "filter-errors")
+
+    def test_another_users_project_id_is_rejected(self):
+        response = self.client.get(f"/tasks/?project={self.foreign.pk}")
+        self.assertEqual(list(response.context["tasks"]), [])
+        self.assertContains(response, "filter-errors")
+
+    def test_csv_with_invalid_filter_has_only_the_header(self):
+        response = self.client.get("/tasks/export.csv?priority=URGENT")
+        rows = list(csv.reader(io.StringIO(response.content.decode("utf-8-sig"))))
+        self.assertEqual(len(rows), 1)
+
+    def test_valid_filters_still_work(self):
+        response = self.client.get("/tasks/?status=PENDING&sort=priority")
+        self.assertEqual([t.title for t in response.context["tasks"]], ["Visible"])
+        self.assertNotContains(response, "filter-errors")
