@@ -23,7 +23,15 @@
         Dashboard
       </a>
     </nav>
-    <div class="sidebar-foot">{% block sidebar_foot %}{% endblock %}</div>
+    <div class="sidebar-foot">
+      {% if user.is_authenticated %}
+      <div style="font-weight:600;color:var(--text)">{{ user.username }}</div>
+      <div class="faint small">{{ user.email }}</div>
+      <form method="post" action="{% url 'logout' %}" style="margin-top:10px">
+        {% csrf_token %}<button class="btn btn-sm" type="submit">Sign out</button>
+      </form>
+      {% endif %}
+    </div>
   </aside>
 
   <div class="main">

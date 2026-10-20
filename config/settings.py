@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "accounts",
 ]
 
 MIDDLEWARE = [
@@ -96,6 +97,13 @@ LANGUAGE_CODE = "en-us"
 TIME_ZONE = os.environ.get("DJANGO_TIME_ZONE", "Asia/Kolkata")
 USE_I18N = True
 USE_TZ = True
+
+
+# Authentication
+
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "home"
+LOGOUT_REDIRECT_URL = "login"
 
 
 # Static files

@@ -1,0 +1,13 @@
+{% extends "accounts/auth_base.html" %}
+{% block title %}Create account{% endblock %}
+{% block auth %}
+<h1 style="margin-bottom:4px">Create your account</h1>
+<p class="muted" style="margin:0 0 20px">Start organising projects in a minute.</p>
+<form method="post">
+  {% csrf_token %}
+  {% include "partials/form_errors.html" %}
+  {% for field in form %}{% include "partials/field.html" %}{% endfor %}
+  <div class="form-actions"><button class="btn btn-primary btn-block" type="submit">Create account</button></div>
+</form>
+{% endblock %}
+{% block auth_foot %}Already registered? <a href="{% url 'login' %}">Sign in</a>{% endblock %}

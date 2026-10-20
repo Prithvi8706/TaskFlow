@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <a class="brand" href="/"><span class="brand-mark">T</span> TaskFlow</a>
+    <div class="card"><div class="card-body">
+      {% block auth %}{% endblock %}
+    </div></div>
+    <div class="auth-foot">{% block auth_foot %}{% endblock %}</div>
+  </div>
+</div>
+{% endblock %}
